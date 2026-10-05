@@ -61,7 +61,7 @@ export function AuditStub({
 
           <dt className="text-ink-soft font-medium">Fabric wastage:</dt>
           <dd className="text-ink font-bold tabular-nums text-right">
-            {wastagePct.toFixed(2)} % {capPct !== undefined ? `(cap ${capPct.toFixed(1)} %)` : ""}
+            {Number(wastagePct || 0).toFixed(2)} % {capPct !== undefined && capPct !== null ? `(cap ${Number(capPct).toFixed(1)} %)` : ""}
           </dd>
         </dl>
 

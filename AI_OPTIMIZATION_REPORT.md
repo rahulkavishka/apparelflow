@@ -253,8 +253,8 @@ ApparelFlow enforces a 5-tier defense-in-depth model where no single layer can c
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │ Tier 1: Client UI Guard                                                │
-│ • "Approve Batch" button disabled via server-confirmed canApprove     │
-│ • Gate strip visual alarm (Red = Closed, Green = Open)                │
+│ • "Approve Batch" button disabled via server-confirmed canApprove      │
+│ • Gate strip visual alarm (Red = Closed, Green = Open)                 │
 │ • Real-time traffic-light evaluation on every physical count change    │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │ HTTP Request
@@ -266,7 +266,7 @@ ApparelFlow enforces a 5-tier defense-in-depth model where no single layer can c
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
 ┌───────────────────────────────────▼────────────────────────────────────┐
-│ Tier 3: Strict Schema Validation (Zod)                                │
+│ Tier 3: Strict Schema Validation (Zod)                                 │
 │ • .strict() disallows extra keys (rejects client-sent "status")        │
 │ • Rejects negative quantities, non-integer counts, invalid roll IDs    │
 │ • Immediate 400 Bad Request with field-level error envelope            │

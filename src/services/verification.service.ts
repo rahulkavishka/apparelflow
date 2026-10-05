@@ -560,7 +560,11 @@ export async function listVerificationHistory() {
     id: log.id,
     orderId: log.orderId,
     orderNo: log.order.orderNo,
-    recipe: log.order.recipe,
+    recipe: {
+      recipeCode: log.order.recipe.recipeCode,
+      name: log.order.recipe.name,
+      wastageCap: Number(log.order.recipe.wastageCap),
+    },
     targetQty: log.order.targetQty,
     fabricRollId: log.order.fabricRollId,
     decision: log.decision,

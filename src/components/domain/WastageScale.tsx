@@ -13,15 +13,20 @@ export function WastageScale({
   wastagePct,
   capPct,
 }: WastageScaleProps) {
-  const isOverCap = wastagePct > capPct;
-  const isNegative = wastagePct < 0;
+  const cap = Number(capPct || 0);
+  const wastage = Number(wastagePct || 0);
+  const act = Number(actualYds || 0);
+  const exp = Number(expectedYds || 0);
+
+  const isOverCap = wastage > cap;
+  const isNegative = wastage < 0;
 
   // Scale domain: 0 to max(cap * 2, wastage + 2, 10)
-  const maxScale = Math.max(capPct * 2, wastagePct + 2, 10);
-  const capPositionPct = Math.min(100, Math.max(0, (capPct / maxScale) * 100));
+  const maxScale = Math.max(cap * 2, wastage + 2, 10);
+  const capPositionPct = Math.min(100, Math.max(0, (cap / maxScale) * 100));
   const fillWidthPct = isNegative
     ? 0
-    : Math.min(100, Math.max(0, (wastagePct / maxScale) * 100));
+    : Math.min(100, Math.max(0, (wastage / maxScale) * 100));
 
   // Generate tick marks (every 1 point up to maxScale, max 12 ticks)
   const tickStep = maxScale <= 15 ? 1 : 2;
@@ -32,11 +37,11 @@ export function WastageScale({
 
   let summaryText = "";
   if (isNegative) {
-    summaryText = `Under expected. Expected ${expectedYds.toFixed(2)} yds, used ${actualYds.toFixed(2)} yds.`;
+    summaryText = `Under expected. Expected ${exp.toFixed(2)} yds, used ${act.toFixed(2)} yds.`;
   } else if (isOverCap) {
-    summaryText = `Over cap by ${(wastagePct - capPct).toFixed(1)} points. The batch can still pass.`;
+    summaryText = `Over cap by ${(wastage - cap).toFixed(1)} points. The batch can still pass.`;
   } else {
-    summaryText = `Within cap. Expected ${expectedYds.toFixed(2)} yds, used ${actualYds.toFixed(2)} yds.`;
+    summaryText = `Within cap. Expected ${exp.toFixed(2)} yds, used ${act.toFixed(2)} yds.`;
   }
 
   return (
@@ -58,7 +63,7 @@ export function WastageScale({
               isOverCap ? "text-excess-fg" : "text-ink"
             }`}
           >
-            {wastagePct > 0 ? `+${wastagePct.toFixed(2)} %` : `${wastagePct.toFixed(2)} %`}
+            {wastage > 0 ? `+${wastage.toFixed(2)} %` : `${wastage.toFixed(2)} %`}
           </span>
         </div>
       </div>
@@ -72,7 +77,7 @@ export function WastageScale({
             className="absolute -translate-x-1/2 flex flex-col items-center pointer-events-none"
           >
             <span className="text-[10px] font-bold text-ink-soft whitespace-nowrap">
-              ▲ cap {capPct.toFixed(1)}%
+              ▲ cap {cap.toFixed(1)}%
             </span>
           </div>
         </div>

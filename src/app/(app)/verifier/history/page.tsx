@@ -122,8 +122,8 @@ export default function VerifierHistoryPage() {
                   decision={log.decision}
                   verifierName={log.verifier.fullName}
                   timestamp={log.timestamp}
-                  wastagePct={log.wastagePct}
-                  capPct={log.recipe.wastageCap}
+                  wastagePct={Number(log.wastagePct ?? 0)}
+                  capPct={Number(log.recipe.wastageCap ?? 0)}
                   rejectionNote={log.rejectionNote}
                   items={snapshotItems}
                 />

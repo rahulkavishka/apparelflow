@@ -1,30 +1,21 @@
 "use client";
 
-import * as React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Mail, ArrowRight, Factory, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DemoCredentialPanel } from "@/components/domain/DemoCredentialPanel";
 import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [error, setError] = React.useState<string | null>(null);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!email || !password) {
-      setError("Please enter both email and password.");
-      return;
-    }
-
+  const performLogin = async (loginEmail: string, loginPass: string) => {
     setError(null);
     setIsLoading(true);
 
@@ -32,18 +23,17 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: loginEmail, password: loginPass }),
       });
 
       const json = await res.json();
 
       if (!res.ok) {
-        throw new Error(json.error?.message || "Failed to authenticate");
+        throw new Error(json.error?.message || "Email or password is incorrect.");
       }
 
-      toast.success(`Welcome back, ${json.data.fullName}!`);
+      toast.success("Signed in.");
 
-      // Route by role
       const role = json.data.role;
       if (role === "cutting_verifier") {
         router.push("/verifier/queue");
@@ -54,7 +44,7 @@ export default function LoginPage() {
       }
       router.refresh();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Authentication failed";
+      const msg = err instanceof Error ? err.message : "Email or password is incorrect.";
       setError(msg);
       toast.error(msg);
     } finally {
@@ -62,139 +52,112 @@ export default function LoginPage() {
     }
   };
 
-  const handleSelectDemoCredential = (demoEmail: string, demoPass: string) => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      setError("Enter both email and password.");
+      return;
+    }
+    performLogin(email, password);
+  };
+
+  const handleFillCredentials = (demoEmail: string, demoPass: string) => {
     setEmail(demoEmail);
     setPassword(demoPass);
     setError(null);
-
-    // Auto trigger login for swift evaluator experience
-    setIsLoading(true);
-    fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: demoEmail, password: demoPass }),
-    })
-      .then(async (res) => {
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error?.message || "Login failed");
-        toast.success(`Signed in as ${json.data.fullName} (${json.data.role})`);
-        if (json.data.role === "cutting_verifier") {
-          router.push("/verifier/queue");
-        } else if (json.data.role === "sewing_supervisor") {
-          router.push("/sewing/queue");
-        } else {
-          router.push("/supervisor/orders");
-        }
-        router.refresh();
-      })
-      .catch((err) => {
-        const msg = err instanceof Error ? err.message : "Login failed";
-        setError(msg);
-        toast.error(msg);
-      })
-      .finally(() => setIsLoading(false));
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-4xl px-4">
-        {/* Header Branding */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center p-3 bg-blue-700 text-white rounded-xl shadow-md mb-3">
-            <Factory className="h-8 w-8" />
-          </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-            ApparelFlow ERP
-          </h1>
-          <p className="mt-1 text-sm font-semibold text-slate-600">
-            Cutting Operations & Gatekeeper Verification Terminal
-          </p>
-          <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold rounded-full">
-            <span>Server-Enforced RBAC & Hard-Stop Quality Gate</span>
-          </div>
+    <div className="min-h-screen bg-chalk flex flex-col">
+      {/* 56px vat-deep band header */}
+      <header className="h-14 bg-vat-deep px-6 flex items-center shrink-0">
+        <div className="max-w-[1200px] w-full mx-auto flex items-baseline gap-3">
+          <span className="font-display text-2xl font-semibold text-paper tracking-normal">
+            ApparelFlow
+          </span>
+          <span className="text-sm text-vat-tint font-normal">
+            Cutting gate
+          </span>
         </div>
+      </header>
 
-        <div className="space-y-6">
-          {/* Main Login Card */}
-          <div className="max-w-md mx-auto w-full">
-            <Card className="border-2 border-slate-300 shadow-lg bg-white">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xl font-bold text-slate-900">
-                  Terminal Authentication
-                </CardTitle>
-                <CardDescription className="text-sm font-medium text-slate-600">
-                  Enter your factory credentials or use the evaluator panel below.
-                </CardDescription>
-              </CardHeader>
-              <form onSubmit={handleSubmit}>
-                <CardContent className="space-y-4">
-                  {error && (
-                    <Alert variant="destructive">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertTitle>Authentication Failed</AlertTitle>
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
+      {/* Main content */}
+      <main className="flex-1 max-w-[1200px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          {/* Sign In Form */}
+          <div className="rounded-[4px] border border-rule bg-paper p-6 space-y-6">
+            <div className="border-b border-rule pb-3">
+              <h1 className="text-xl font-bold text-ink">Sign in</h1>
+              <p className="text-sm text-ink-soft mt-1">
+                Enter your factory account credentials to access your terminal.
+              </p>
+            </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-2.5 h-5 w-5 text-slate-500" />
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="supervisor@apparelflow.demo"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10 text-slate-900 font-semibold"
-                        required
-                        disabled={isLoading}
-                        autoComplete="email"
-                      />
-                    </div>
-                  </div>
+            {error && (
+              <div
+                role="alert"
+                className="rounded-[4px] border-l-4 border-l-short-edge border border-rule bg-short-bg p-3 text-sm text-short-fg"
+              >
+                {error}
+              </div>
+            )}
 
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-2.5 h-5 w-5 text-slate-500" />
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="••••••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10 text-slate-900 font-semibold"
-                        required
-                        disabled={isLoading}
-                        autoComplete="current-password"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="pt-2">
-                  <Button
-                    type="submit"
-                    className="w-full text-base font-bold h-11"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Authenticating..." : "Sign In to Terminal"}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </CardFooter>
-              </form>
-            </Card>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-base font-bold text-ink">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="supervisor@apparelflow.demo"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                  autoComplete="email"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="password" className="text-base font-bold text-ink">
+                  Password
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                  autoComplete="current-password"
+                  required
+                />
+              </div>
+
+              <div className="pt-2">
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="w-full text-base font-bold"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Signing in..." : "Sign in"}
+                </Button>
+              </div>
+            </form>
           </div>
 
-          {/* Evaluator Demo Credential Panel */}
-          <div className="bg-white p-6 rounded-xl border-2 border-slate-300 shadow-md">
+          {/* Demo Credential Panel */}
+          <div>
             <DemoCredentialPanel
-              onSelectCredential={handleSelectDemoCredential}
+              onFillCredentials={handleFillCredentials}
+              onDirectLogin={performLogin}
               isLoading={isLoading}
             />
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

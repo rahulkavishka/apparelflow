@@ -4,28 +4,34 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 cursor-pointer",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[4px] text-base font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vat disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-0 disabled:bg-disabled-bg disabled:text-ink-soft cursor-pointer",
   {
     variants: {
       variant: {
         default:
-          "bg-blue-700 text-white shadow hover:bg-blue-800 active:bg-blue-900 disabled:bg-slate-300 disabled:text-slate-600",
-        destructive:
-          "bg-red-700 text-white shadow-sm hover:bg-red-800 active:bg-red-900 disabled:bg-slate-300 disabled:text-slate-600",
-        outline:
-          "border-2 border-slate-300 bg-white text-slate-900 shadow-sm hover:bg-slate-100 hover:text-slate-900",
+          "h-12 bg-vat px-5 text-paper hover:bg-vat-deep active:bg-vat-deep",
+        primary:
+          "h-12 bg-vat px-5 text-paper hover:bg-vat-deep active:bg-vat-deep",
         secondary:
-          "bg-slate-100 text-slate-900 shadow-sm hover:bg-slate-200",
-        ghost: "text-slate-700 hover:bg-slate-100 hover:text-slate-900",
-        link: "text-blue-700 underline-offset-4 hover:underline",
-        success:
-          "bg-emerald-700 text-white shadow hover:bg-emerald-800 active:bg-emerald-900",
+          "h-11 border border-control-edge bg-paper px-4 text-ink hover:bg-row-hover",
+        outline:
+          "h-11 border border-control-edge bg-paper px-4 text-ink hover:bg-row-hover",
+        reject:
+          "h-11 border-[1.5px] border-short-edge bg-paper px-4 text-short-fg hover:bg-short-bg",
+        destructive:
+          "h-11 border-[1.5px] border-short-edge bg-paper px-4 text-short-fg hover:bg-short-bg",
+        quiet:
+          "h-auto p-0 text-vat font-bold hover:underline",
+        ghost:
+          "h-10 px-3 text-ink hover:bg-row-hover",
+        link:
+          "h-auto p-0 text-vat font-bold hover:underline",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-11 rounded-md px-8 text-base",
-        icon: "h-9 w-9",
+        default: "h-12 px-5 py-2",
+        sm: "h-9 px-3 text-sm",
+        lg: "h-12 px-8 text-lg",
+        icon: "h-10 w-10 p-0",
       },
     },
     defaultVariants: {

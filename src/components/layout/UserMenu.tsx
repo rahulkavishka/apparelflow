@@ -11,9 +11,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { LogOut, HelpCircle, ChevronUp, User } from "lucide-react";
+import { LogOut, ChevronUp } from "lucide-react";
 
 interface UserMenuProps {
   actor: Actor;
@@ -22,7 +21,7 @@ interface UserMenuProps {
   className?: string;
 }
 
-export function UserMenu({ actor, onOpenShortcuts, collapsed = false, className = "" }: UserMenuProps) {
+export function UserMenu({ actor, collapsed = false, className = "" }: UserMenuProps) {
   const router = useRouter();
 
   const getInitials = (name: string) => {

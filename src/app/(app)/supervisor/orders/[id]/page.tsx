@@ -13,7 +13,7 @@ import { OrderNo } from "@/components/domain/OrderNo";
 import { WastageScale } from "@/components/domain/WastageScale";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { toast } from "sonner";
-import { OrderStatus, ItemStatus } from "@prisma/client";
+import { ItemStatus } from "@prisma/client";
 import { useOrderDetail, useSubmitOrder, useRecutOrder } from "@/hooks/useOrders";
 import { formatFactoryDateTime } from "@/lib/format";
 import { useQueryClient } from "@tanstack/react-query";

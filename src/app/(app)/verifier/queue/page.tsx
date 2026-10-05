@@ -20,8 +20,8 @@ export default function VerifierQueuePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [sortField, setSortField] = useState<"submittedAt" | "orderNo" | "targetQty">("submittedAt");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [sortField] = useState<"submittedAt" | "orderNo" | "targetQty">("submittedAt");
+  const [sortDir] = useState<"asc" | "desc">("asc");
   const [density, setDensity] = useState<TableDensity>("compact");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const queryClient = useQueryClient();

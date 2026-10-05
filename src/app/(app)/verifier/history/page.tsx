@@ -10,10 +10,10 @@ import { FilterChips, FilterChipOption } from "@/components/ui/FilterChips";
 import { Pagination } from "@/components/ui/Pagination";
 import { DensityToggle, TableDensity } from "@/components/ui/DensityToggle";
 import { TableLoadingRow } from "@/components/ui/LoadingSpinner";
-import { AuditStub, AuditSnapshotItem } from "@/components/domain/AuditStub";
+import { AuditStub } from "@/components/domain/AuditStub";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useVerificationHistory } from "@/hooks/useVerification";
-import { Search, History, CheckCircle2, AlertTriangle, FileText, Eye } from "lucide-react";
+import { Search, History, CheckCircle2, AlertTriangle, Eye } from "lucide-react";
 import { toast } from "sonner";
 
 export default function VerifierHistoryPage() {

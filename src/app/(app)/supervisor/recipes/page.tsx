@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { DensityToggle, TableDensity } from "@/components/ui/DensityToggle";
 import { TableLoadingRow } from "@/components/ui/LoadingSpinner";
 import { RecipeDrawer, RecipeDrawerData } from "@/components/domain/RecipeDrawer";
-import { Search, BookOpen, Eye, ArrowRight } from "lucide-react";
+import { Search, BookOpen, Eye } from "lucide-react";
 
 export default function RecipesPage() {
   const { data: recipes, isLoading } = useRecipesList();

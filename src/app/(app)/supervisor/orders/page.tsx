@@ -25,7 +25,6 @@ import {
   Plus,
   Scissors,
   Clock,
-  AlertTriangle,
   CheckCircle2,
   FileSpreadsheet,
   Send,
@@ -53,8 +52,8 @@ function SupervisorOrdersContent() {
   const [searchQuery, setSearchQuery] = useState(searchParam);
   const [page, setPage] = useState(pageParam || 1);
   const [pageSize, setPageSize] = useState(pageSizeParam || 10);
-  const [sortField, setSortField] = useState<"createdAt" | "orderNo" | "targetQty" | "actualFabricYds" | "status">("createdAt");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [sortField] = useState<"createdAt" | "orderNo" | "targetQty" | "actualFabricYds" | "status">("createdAt");
+  const [sortDir] = useState<"asc" | "desc">("desc");
   const [density, setDensity] = useState<TableDensity>("compact");
 
   // Selection state

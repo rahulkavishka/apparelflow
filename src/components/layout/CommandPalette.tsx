@@ -15,6 +15,7 @@ import {
   UserCheck,
   ArrowRight,
   X,
+  Loader2,
 } from "lucide-react";
 
 interface CommandPaletteProps {
@@ -254,7 +255,11 @@ export function CommandPalette({ open, onOpenChange, actor }: CommandPaletteProp
 
         {/* Seamless Search Bar */}
         <div className="flex items-center px-3.5 border-b border-rule bg-paper">
-          <Search className="w-4 h-4 text-ink-soft shrink-0" />
+          {isSearchingOrders ? (
+            <Loader2 className="w-4 h-4 text-vat animate-spin shrink-0" />
+          ) : (
+            <Search className="w-4 h-4 text-ink-soft shrink-0" />
+          )}
           <input
             type="text"
             value={query}

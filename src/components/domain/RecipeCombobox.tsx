@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Search, ChevronDown, Check, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export interface RecipeOption {
   id: string;

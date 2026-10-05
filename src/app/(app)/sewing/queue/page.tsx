@@ -13,7 +13,7 @@ import { FilterChips, FilterChipOption } from "@/components/ui/FilterChips";
 import { Pagination } from "@/components/ui/Pagination";
 import { DensityToggle, TableDensity } from "@/components/ui/DensityToggle";
 import { TableLoadingRow } from "@/components/ui/LoadingSpinner";
-import { useSewingQueue, useStartSewing } from "@/hooks/useSewing";
+import { useSewingQueue } from "@/hooks/useSewing";
 import { toast } from "sonner";
 import { OrderStatus } from "@prisma/client";
 import { Search, Layers, Play, CheckCircle2, Clock, RefreshCw } from "lucide-react";

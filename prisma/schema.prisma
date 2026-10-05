@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  cutting_supervisor
+  cutting_verifier
+  sewing_supervisor
+}
+
+enum OrderStatus {
+  CUTTING_IN_PROGRESS
+  PENDING_VERIFICATION
+  REJECTED
+  VERIFIED
+}
+
+enum ItemStatus {
+  GREEN
+  YELLOW
+  RED
+}
+
+enum Decision {
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         Role
+  fullName     String   @map("full_name")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  ordersCreated CuttingOrder[]    @relation("OrderCreator")
+  sewingStarted CuttingOrder[]    @relation("SewingStarter")
+  verifications VerificationLog[]
+
+  @@map("users")
+}
+
+model Recipe {
+  id             String  @id @default(uuid()) @db.Uuid
+  recipeCode     String  @unique @map("recipe_code")
+  name           String
+  category       String
+  stdFabricYards Decimal @map("std_fabric_yards") @db.Decimal(6, 2)
+  wastageCap     Decimal @map("wastage_cap") @db.Decimal(5, 2)
+
+  components RecipeComponent[]
+  orders     CuttingOrder[]
+
+  @@map("recipes")
+}
+
+model RecipeComponent {
+  id               String  @id @default(uuid()) @db.Uuid
+  recipeId         String  @map("recipe_id") @db.Uuid
+  componentName    String  @map("component_name")
+  piecesPerGarment Int     @map("pieces_per_garment")
+  imageUrl         String? @map("image_url")
+
+  recipe Recipe             @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  items  VerificationItem[]
+
+  @@unique([recipeId, componentName])
+  @@map("recipe_components")
+}
+
+model CuttingOrder {
+  id              String      @id @default(uuid()) @db.Uuid
+  orderSeq        Int         @unique @default(autoincrement()) @map("order_seq")
+  orderNo         String      @unique @map("order_no")
+  recipeId        String      @map("recipe_id") @db.Uuid
+  targetQty       Int         @map("target_qty")
+  fabricRollId    String      @map("fabric_roll_id")
+  actualFabricYds Decimal     @map("actual_fabric_yds") @db.Decimal(8, 2)
+  status          OrderStatus @default(CUTTING_IN_PROGRESS)
+  createdById     String      @map("created_by") @db.Uuid
+  createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime    @updatedAt @map("updated_at") @db.Timestamptz
+  submittedAt     DateTime?   @map("submitted_at") @db.Timestamptz
+  verifiedAt      DateTime?   @map("verified_at") @db.Timestamptz
+  sewingStartedAt DateTime?   @map("sewing_started_at") @db.Timestamptz
+  sewingStartedBy String?     @map("sewing_started_by") @db.Uuid
+
+  recipe    Recipe             @relation(fields: [recipeId], references: [id], onDelete: Restrict)
+  createdBy User               @relation("OrderCreator", fields: [createdById], references: [id])
+  sewingBy  User?              @relation("SewingStarter", fields: [sewingStartedBy], references: [id])
+  items     VerificationItem[]
+  logs      VerificationLog[]
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([createdById])
+  @@map("cutting_orders")
+}
+
+model VerificationItem {
+  id          String      @id @default(uuid()) @db.Uuid
+  orderId     String      @map("order_id") @db.Uuid
+  componentId String      @map("component_id") @db.Uuid
+  expectedQty Int         @map("expected_qty")
+  actualQty   Int?        @map("actual_qty")
+  status      ItemStatus?
+
+  order     CuttingOrder    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  component RecipeComponent @relation(fields: [componentId], references: [id])
+
+  @@unique([orderId, componentId])
+  @@index([orderId])
+  @@map("verification_items")
+}
+
+model VerificationLog {
+  id               String   @id @default(uuid()) @db.Uuid
+  orderId          String   @map("order_id") @db.Uuid
+  verifierId       String   @map("verifier_id") @db.Uuid
+  decision         Decision
+  rejectionNote    String?  @map("rejection_note")
+  wastagePct       Decimal  @map("wastage_pct") @db.Decimal(7, 2)
+  varianceSnapshot Json     @map("variance_snapshot")
+  timestamp        DateTime @default(now()) @db.Timestamptz
+
+  order    CuttingOrder @relation(fields: [orderId], references: [id])
+  verifier User         @relation(fields: [verifierId], references: [id])
+
+  @@index([orderId, timestamp(sort: Desc)])
+  @@index([verifierId])
+  @@map("verification_logs")
+}

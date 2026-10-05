@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: ApparelFlow ERP — Cutting Operations & Gatekeeper Verification Terminal
+  title: ApparelFlow ERP - Cutting Operations & Gatekeeper Verification Terminal
   version: 1.0.0
   description: >
     Production batch verification and sewing queue gatekeeper API.

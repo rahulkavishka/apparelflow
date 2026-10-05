@@ -19,7 +19,7 @@ const barlow = Barlow_Condensed({
 });
 
 export const metadata: Metadata = {
-  title: "ApparelFlow ERP — Cutting Operations & Gatekeeper Verification Terminal",
+  title: "ApparelFlow ERP - Cutting Operations & Gatekeeper Verification Terminal",
   description:
     "Industrial garment production batch verification terminal and sewing queue gatekeeper with server-side RBAC and tamper protection.",
   icons: {

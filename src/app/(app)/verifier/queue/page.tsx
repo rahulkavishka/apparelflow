@@ -126,7 +126,7 @@ export default function VerifierQueuePage() {
           />
         </div>
 
-        <div className="flex items-center gap-2 self-end sm:self-auto">
+        <div className="hidden md:flex items-center gap-2 self-end sm:self-auto">
           <DensityToggle density={density} onChange={setDensity} />
         </div>
       </div>

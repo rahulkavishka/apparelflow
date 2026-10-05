@@ -130,7 +130,7 @@ export function RecipeCombobox({
 
       {/* Dropdown Popover */}
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1 w-full min-w-[280px] bg-paper rounded-[4px] border border-rule shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+        <div className="absolute left-0 right-0 sm:right-auto top-full mt-1 w-full sm:w-auto sm:min-w-[280px] max-w-[calc(100vw-32px)] bg-paper rounded-[4px] border border-rule shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
           {/* Search Box inside dropdown */}
           <div className="p-2 border-b border-rule bg-sheet/40 flex items-center gap-2">
             <Search className="w-3.5 h-3.5 text-ink-soft shrink-0" />

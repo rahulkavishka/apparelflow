@@ -57,15 +57,15 @@ export function TopBar({
 
   return (
     <>
-      <header className="h-12 border-b border-rule bg-paper px-4 flex items-center justify-between gap-3 shrink-0 z-10 select-none">
+      <header className="h-12 border-b border-rule bg-paper px-3 sm:px-4 flex items-center justify-between gap-2 sm:gap-3 shrink-0 z-10 select-none">
         {/* Left: Mobile Drawer Hamburger & Breadcrumbs */}
-        <div className="flex items-center gap-2.5 min-w-0">
+        <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
           {/* Mobile hamburger */}
           <Button
             variant="ghost"
             size="sm"
             onClick={onOpenMobileMenu}
-            className="lg:hidden h-8 w-8 p-0 text-ink-soft hover:text-ink cursor-pointer"
+            className="lg:hidden h-8 w-8 p-0 text-ink-soft hover:text-ink cursor-pointer shrink-0"
             aria-label="Open navigation menu"
           >
             <Menu className="w-4 h-4" />
@@ -75,16 +75,18 @@ export function TopBar({
         </div>
 
         {/* Center/Right: Command Palette Trigger, Shortcuts & Manual Refresh */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Quick Search Button (Ctrl+K) */}
           <button
             type="button"
             onClick={() => setIsPaletteOpen(true)}
-            className="h-8 px-2.5 text-xs text-ink-soft hover:text-ink border border-rule bg-sheet/40 hover:bg-sheet flex items-center gap-2 rounded-[3px] cursor-pointer transition-colors"
+            className="h-8 w-8 sm:w-auto px-0 sm:px-2.5 text-xs text-ink-soft hover:text-ink border border-rule bg-sheet/40 hover:bg-sheet flex items-center justify-center gap-2 rounded-[3px] cursor-pointer transition-colors"
+            title="Search (Ctrl+K)"
+            aria-label="Search"
           >
             <Search className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Search...</span>
-            <kbd className="text-[10px] font-mono text-ink-soft bg-paper border border-rule px-1.5 py-0.2 rounded-[2px]">
+            <kbd className="hidden sm:inline-block text-[10px] font-mono text-ink-soft bg-paper border border-rule px-1.5 py-0.2 rounded-[2px]">
               Ctrl K
             </kbd>
           </button>
@@ -95,13 +97,13 @@ export function TopBar({
               variant="outline"
               size="sm"
               onClick={onOpenShortcuts}
-              className="h-8 px-2 text-xs text-ink-soft hover:text-ink border-rule bg-paper hover:bg-sheet rounded-[3px] flex items-center gap-1.5 cursor-pointer"
+              className="h-8 w-8 sm:w-auto px-0 sm:px-2 text-xs text-ink-soft hover:text-ink border-rule bg-paper hover:bg-sheet rounded-[3px] flex items-center justify-center gap-1.5 cursor-pointer"
               title="Keyboard shortcuts (?)"
               aria-label="Keyboard shortcuts"
             >
               <HelpCircle className="w-3.5 h-3.5" />
               <span className="hidden md:inline">Shortcuts</span>
-              <kbd className="hidden sm:inline-block text-[10px] font-mono text-ink-soft bg-sheet border border-rule px-1 py-0.2 rounded-[2px]">
+              <kbd className="hidden md:inline-block text-[10px] font-mono text-ink-soft bg-sheet border border-rule px-1 py-0.2 rounded-[2px]">
                 ?
               </kbd>
             </Button>
@@ -113,7 +115,7 @@ export function TopBar({
             size="sm"
             onClick={handleManualRefresh}
             disabled={isRefreshing}
-            className="h-8 px-2.5 text-xs text-ink-soft hover:text-ink border-rule bg-paper hover:bg-sheet rounded-[3px] flex items-center gap-1.5 cursor-pointer"
+            className="h-8 w-8 sm:w-auto px-0 sm:px-2.5 text-xs text-ink-soft hover:text-ink border-rule bg-paper hover:bg-sheet rounded-[3px] flex items-center justify-center gap-1.5 cursor-pointer"
             title="Refresh active views"
             aria-label="Refresh active views"
           >

@@ -153,9 +153,9 @@ export function CreateOrderModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[880px] p-6 max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="border-b border-rule pb-3">
-          <DialogTitle className="text-xl font-bold text-ink">
+      <DialogContent className="max-w-[880px] w-[95vw] sm:w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="border-b border-rule pb-2.5 sm:pb-3">
+          <DialogTitle className="text-lg sm:text-xl font-bold text-ink">
             Create cutting order
           </DialogTitle>
         </DialogHeader>

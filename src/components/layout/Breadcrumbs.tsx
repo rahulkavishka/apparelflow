@@ -69,20 +69,20 @@ export function Breadcrumbs() {
         </Button>
       )}
 
-      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 overflow-hidden">
+      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 min-w-0 overflow-hidden">
         {crumbs.map((crumb, idx) => {
           const isLast = idx === crumbs.length - 1;
           return (
             <React.Fragment key={crumb.label}>
               {idx > 0 && <ChevronRight className="w-3.5 h-3.5 text-rule shrink-0" />}
               {isLast || !crumb.href ? (
-                <span className="font-bold text-ink truncate max-w-[200px]" aria-current="page">
+                <span className="font-bold text-ink truncate max-w-[90px] sm:max-w-[140px] md:max-w-[200px]" aria-current="page">
                   {crumb.label}
                 </span>
               ) : (
                 <Link
                   href={crumb.href}
-                  className="hover:text-ink hover:underline truncate max-w-[150px]"
+                  className="hover:text-ink hover:underline truncate max-w-[80px] sm:max-w-[120px]"
                 >
                   {crumb.label}
                 </Link>

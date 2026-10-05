@@ -368,21 +368,23 @@ function SupervisorOrdersContent() {
       </div>
 
       {/* Filter Tabs / Chips Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-rule pb-3">
-        <FilterChips
-          options={statusOptions}
-          value={selectedStatus}
-          onChange={handleStatusChange}
-        />
+      <div className="flex items-center justify-between gap-3 border-b border-rule pb-2 overflow-hidden">
+        <div className="flex-1 min-w-0 overflow-x-auto">
+          <FilterChips
+            options={statusOptions}
+            value={selectedStatus}
+            onChange={handleStatusChange}
+          />
+        </div>
 
-        <div className="flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-2 shrink-0">
           <DensityToggle density={density} onChange={setDensity} />
         </div>
       </div>
 
       {/* Toolbar: Search & Searchable Recipe Combobox */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="flex flex-1 items-center gap-2.5 max-w-lg">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3">
+        <div className="flex flex-col sm:flex-row flex-1 items-stretch sm:items-center gap-2.5 max-w-xl">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-soft pointer-events-none" />
             <Input
@@ -391,11 +393,11 @@ function SupervisorOrdersContent() {
               placeholder="Search by Order #, Roll ID, or Recipe... (Press /)"
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-8 text-xs h-9 bg-paper font-sans"
+              className="pl-8 text-xs h-9 bg-paper font-sans w-full"
             />
           </div>
 
-          <div className="w-56 shrink-0">
+          <div className="w-full sm:w-56 shrink-0">
             <RecipeCombobox
               recipes={recipes}
               value={selectedRecipeId}
@@ -407,12 +409,12 @@ function SupervisorOrdersContent() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-end sm:self-auto">
+        <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
           <Button
             variant="secondary"
             size="sm"
             onClick={handleExportCSV}
-            className="text-xs h-9 flex items-center gap-1.5"
+            className="text-xs h-9 flex items-center justify-center gap-1.5 flex-1 sm:flex-none"
             title="Export filtered records to CSV"
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />

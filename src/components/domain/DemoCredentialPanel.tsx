@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { Scissors, ShieldCheck, Layers, ArrowRight } from "lucide-react";
 
 interface DemoCredentialPanelProps {
   onFillCredentials: (email: string, pass: string) => void;
@@ -12,22 +13,25 @@ interface DemoCredentialPanelProps {
 const DEMO_ACCOUNTS = [
   {
     roleTitle: "Cutting supervisor",
-    description: "Creates cutting orders, sets batch quantities, and sends orders to verification.",
-    restriction: "Cannot verify batches. Cannot view the Sewing Queue.",
+    icon: Scissors,
+    tag: "Floor Planner",
+    description: "Creates batches & sends orders to verification gate.",
     email: "supervisor@apparelflow.demo",
     password: "Supervisor@123",
   },
   {
     roleTitle: "Cutting verifier",
-    description: "Quality gatekeeper. Counts physical cut components per recipe, triggers traffic lights, approves or rejects batches.",
-    restriction: "Cannot create orders or edit recipes. Cannot view the Sewing Queue.",
+    icon: ShieldCheck,
+    tag: "Quality Auditor",
+    description: "Counts components, audits tolerances, and approves/rejects.",
     email: "verifier@apparelflow.demo",
     password: "Verifier@123",
   },
   {
     roleTitle: "Sewing supervisor",
-    description: "Receives verified batches on the assembly floor, reviews verifier audit notes, and starts sewing assembly.",
-    restriction: "Strictly blocked from seeing unverified, pending, or rejected cutting orders.",
+    icon: Layers,
+    tag: "Assembly Line",
+    description: "Receives released batches and starts line assembly.",
     email: "sewing@apparelflow.demo",
     password: "Sewing@123",
   },
@@ -39,52 +43,74 @@ export function DemoCredentialPanel({
   isLoading,
 }: DemoCredentialPanelProps) {
   return (
-    <div className="rounded-[4px] border border-rule bg-paper p-5">
-      <div className="border-b border-rule pb-3">
-        <h2 className="text-lg font-bold text-ink">Demo accounts</h2>
-        <p className="text-sm text-ink-soft">
-          Each role is enforced by the server.
-        </p>
+    <div className="w-full space-y-2.5">
+      <div className="flex items-center justify-between px-1">
+        <span className="text-[11px] font-bold text-ink-soft uppercase tracking-wider">
+          Quick Demo Access
+        </span>
+        <span className="text-[11px] text-ink-soft">
+          Server-enforced role permissions
+        </span>
       </div>
 
-      <div className="divide-y divide-rule">
-        {DEMO_ACCOUNTS.map((acc) => (
-          <div key={acc.email} className="py-4 first:pt-4 last:pb-1 space-y-2">
-            <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
-              <h3 className="text-base font-bold text-ink">{acc.roleTitle}</h3>
-              <span className="font-mono text-xs text-ink-soft">{acc.email}</span>
-            </div>
-            <p className="text-sm text-ink-soft leading-normal">{acc.description}</p>
-            <p className="text-xs text-short-fg font-medium">{acc.restriction}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {DEMO_ACCOUNTS.map((acc) => {
+          const Icon = acc.icon;
+          return (
+            <div
+              key={acc.email}
+              className="rounded-[4px] border border-rule bg-paper p-3.5 flex flex-col justify-between space-y-3 hover:border-vat/40 transition-colors shadow-xs"
+            >
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-6 w-6 rounded-[3px] bg-sheet border border-rule flex items-center justify-center text-vat">
+                      <Icon className="w-3.5 h-3.5" />
+                    </div>
+                    <h3 className="text-xs font-bold text-ink">{acc.roleTitle}</h3>
+                  </div>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-[2px] bg-sheet border border-rule text-ink-soft font-semibold">
+                    {acc.tag}
+                  </span>
+                </div>
 
-            <div className="bg-sheet p-2 rounded-[4px] border border-rule flex items-center justify-between text-xs text-ink">
-              <span>Password: <strong className="font-mono">{acc.password}</strong></span>
-            </div>
+                <p className="text-[11px] text-ink-soft leading-tight">
+                  {acc.description}
+                </p>
 
-            <div className="flex items-center gap-2 pt-1">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                className="text-sm"
-                disabled={isLoading}
-                onClick={() => onFillCredentials(acc.email, acc.password)}
-              >
-                Use these credentials
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                className="text-sm"
-                disabled={isLoading}
-                onClick={() => onDirectLogin(acc.email, acc.password)}
-              >
-                Sign in as this role
-              </Button>
+                <div className="bg-sheet/60 p-1.5 rounded-[2px] border border-rule/80 text-[11px] font-mono space-y-0.5 text-ink-soft">
+                  <div className="truncate text-ink font-medium">{acc.email}</div>
+                  <div className="text-[10px] text-ink-soft">Pass: {acc.password}</div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 pt-1">
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  className="flex-1 h-7 text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"
+                  disabled={isLoading}
+                  onClick={() => onDirectLogin(acc.email, acc.password)}
+                >
+                  <span>Sign in</span>
+                  <ArrowRight className="w-3 h-3" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="h-7 text-xs px-2 text-ink-soft hover:text-ink cursor-pointer"
+                  disabled={isLoading}
+                  onClick={() => onFillCredentials(acc.email, acc.password)}
+                  title="Fill credentials into form"
+                >
+                  Fill
+                </Button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, use } from "react";
+import React, { useState, useEffect, useCallback, use, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,12 +8,15 @@ import { Button } from "@/components/ui/button";
 import { IntegerInput } from "@/components/domain/IntegerInput";
 import { Lamp } from "@/components/domain/Lamp";
 import { Stamp } from "@/components/domain/Stamp";
+import { OrderNo } from "@/components/domain/OrderNo";
 import { GateStrip } from "@/components/domain/GateStrip";
 import { WastageScale } from "@/components/domain/WastageScale";
 import { RejectOrderModal } from "@/components/domain/RejectOrderModal";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { evaluateTrafficLight, evaluateVerificationBatch } from "@/domain/traffic-light";
 import { toast } from "sonner";
 import { VerificationOrderDto } from "@/services/verification.service";
+import { Zap, ArrowLeft, Check, Lock, AlertTriangle, Save } from "lucide-react";
 
 export default function VerificationTerminalPage({
   params,
@@ -31,6 +34,8 @@ export default function VerificationTerminalPage({
   const [isRejectOpen, setIsRejectOpen] = useState(false);
   const [serverBlockerError, setServerBlockerError] = useState<string | null>(null);
 
+  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
   const fetchOrder = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -38,7 +43,6 @@ export default function VerificationTerminalPage({
       const json = await res.json();
       if (res.ok) {
         setData(json.data);
-        // Initialize local counts from server data
         const initialCounts: Record<string, number | null> = {};
         for (const item of json.data.items) {
           initialCounts[item.componentId] = item.actualQty;
@@ -60,8 +64,8 @@ export default function VerificationTerminalPage({
 
   if (isLoading) {
     return (
-      <div className="p-8 text-center text-ink-soft">
-        Opening Verification Terminal...
+      <div className="py-20 flex flex-col items-center justify-center">
+        <LoadingSpinner size="lg" label="Opening quality inspection workstation..." />
       </div>
     );
   }
@@ -69,9 +73,9 @@ export default function VerificationTerminalPage({
   if (!data) {
     return (
       <div className="p-8 text-center space-y-4">
-        <p className="text-short-fg font-bold">Cutting order not found or not in verification queue.</p>
+        <p className="text-short-fg font-bold text-sm">Cutting order not found or not in verification queue.</p>
         <Link href="/verifier/queue">
-          <Button variant="secondary">Back to queue</Button>
+          <Button variant="secondary" size="sm">Back to queue</Button>
         </Link>
       </div>
     );
@@ -79,7 +83,7 @@ export default function VerificationTerminalPage({
 
   const { order, items, summary: serverSummary } = data;
 
-  // Derive live local evaluation from current input state
+  // Live evaluation from current input state
   const liveItemsForEval = items.map((item) => ({
     componentId: item.componentId,
     componentName: item.name,
@@ -89,18 +93,45 @@ export default function VerificationTerminalPage({
 
   const localEvaluation = evaluateVerificationBatch(liveItemsForEval);
 
-  // Check if local inputs differ from persisted server state
+  // Check if inputs are dirty compared to server persisted state
   const isDirty = items.some(
     (item) => counts[item.componentId] !== item.actualQty
   );
 
-  // Approve Batch button rule (DESIGN.md Section 2.3 & 8.1):
-  // The server decides; Approve is enabled only when server-confirmed summary allows it AND local state is not dirty/unpersisted.
   const canApprove = serverSummary.canApprove && !isDirty && localEvaluation.canApprove;
 
   const handleCountChange = (componentId: string, val: number | null) => {
     setCounts((prev) => ({ ...prev, [componentId]: val }));
     setServerBlockerError(null);
+  };
+
+  // Keyboard navigation between rows
+  const handleKeyDownOnInput = (e: React.KeyboardEvent, index: number) => {
+    if (e.key === "Enter" || e.key === "ArrowDown") {
+      e.preventDefault();
+      const nextItem = items[index + 1];
+      if (nextItem && inputRefs.current[nextItem.componentId]) {
+        inputRefs.current[nextItem.componentId]?.focus();
+        inputRefs.current[nextItem.componentId]?.select();
+      }
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      const prevItem = items[index - 1];
+      if (prevItem && inputRefs.current[prevItem.componentId]) {
+        inputRefs.current[prevItem.componentId]?.focus();
+        inputRefs.current[prevItem.componentId]?.select();
+      }
+    }
+  };
+
+  // Quick Match All Accelerator
+  const handleQuickMatchAll = () => {
+    const matched: Record<string, number | null> = {};
+    for (const item of items) {
+      matched[item.componentId] = item.expectedQty;
+    }
+    setCounts(matched);
+    toast.success("Populated all component counts with expected target quantities.");
   };
 
   const handleSaveCounts = async () => {
@@ -134,8 +165,9 @@ export default function VerificationTerminalPage({
 
       setData(json.data);
       toast.success("Component counts saved and verified.");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to save counts.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to save counts.";
+      toast.error(msg);
     } finally {
       setIsSaving(false);
     }
@@ -164,8 +196,9 @@ export default function VerificationTerminalPage({
 
       toast.success(`Cutting order ${order.orderNo} successfully verified and released to sewing!`);
       router.push("/verifier/queue");
-    } catch (err: any) {
-      toast.error(err.message || "Approval rejected by server gate.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Approval rejected by server gate.";
+      toast.error(msg);
     } finally {
       setIsApproving(false);
     }
@@ -188,19 +221,18 @@ export default function VerificationTerminalPage({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 border-b border-rule pb-4">
+    <div className="space-y-5">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 border-b border-rule pb-3">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="font-display text-3xl font-semibold text-ink">
-              {order.orderNo}
+            <h1 className="font-display text-2xl font-bold text-ink">
+              <OrderNo orderNo={order.orderNo} />
             </h1>
             <Stamp status={order.status} />
           </div>
 
-          {/* Metadata Definition List (DESIGN.md Section 6.3) */}
-          <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-1 text-xs mt-3">
+          <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-1 text-xs mt-2">
             <div>
               <dt className="text-ink-soft">Recipe</dt>
               <dd className="font-bold text-ink">
@@ -209,7 +241,7 @@ export default function VerificationTerminalPage({
             </div>
             <div>
               <dt className="text-ink-soft">Target batch qty</dt>
-              <dd className="font-display text-base font-bold tabular-nums text-ink">
+              <dd className="font-display text-sm font-bold tabular-nums text-ink">
                 {order.targetQty} garments
               </dd>
             </div>
@@ -227,131 +259,149 @@ export default function VerificationTerminalPage({
         </div>
 
         <Link href="/verifier/queue">
-          <Button variant="secondary" size="sm">
-            Back to queue
+          <Button variant="secondary" size="sm" className="h-8 text-xs font-bold flex items-center gap-1.5">
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to queue</span>
           </Button>
         </Link>
       </div>
 
-      {/* Signature Gate Strip (DESIGN.md Section 8.1) */}
+      {/* Signature Gate Strip */}
       <GateStrip
         evaluation={localEvaluation}
         serverCanApprove={serverSummary.canApprove}
         isDirty={isDirty}
       />
 
-      {/* Server 422 Blocker Alert if Triggered */}
+      {/* Server 422 Hard Stop Blocker Alert */}
       {serverBlockerError && (
         <div
           role="alert"
-          className="rounded-none border-l-4 border-l-short-edge border border-rule bg-short-bg p-4 text-short-fg text-sm font-semibold flex items-center justify-between"
+          className="rounded-[2px] border-l-4 border-l-short-edge border border-rule bg-short-bg p-3.5 text-short-fg text-xs font-semibold flex items-center justify-between"
         >
-          <span>Server Gatekeeper Hard Stop: {serverBlockerError}</span>
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>Server Gatekeeper Hard Stop: {serverBlockerError}</span>
+          </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setServerBlockerError(null)}
-            className="text-short-fg hover:bg-short-bg/80 h-7 text-xs"
+            className="text-short-fg hover:bg-short-bg/80 h-6 text-xs px-2"
           >
             Dismiss
           </Button>
         </div>
       )}
 
-      {/* Main Two-Column Terminal (1024px: 2/3 ledger, 1/3 side panel) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      {/* Main Two-Column Terminal Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
         {/* Left Column: Component Count Ledger */}
-        <div className="lg:col-span-2 border border-rule rounded-[2px] bg-paper overflow-hidden">
-          <div className="bg-sheet p-3.5 border-b border-rule flex justify-between items-center">
+        <div className="lg:col-span-2 border border-rule rounded-[2px] bg-paper overflow-hidden shadow-none">
+          <div className="bg-sheet p-3 border-b border-rule flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
-              <h2 className="text-base font-bold text-ink">
-                Component count verification
+              <h2 className="text-sm font-bold text-ink">
+                Component count verification ledger
               </h2>
-              <p className="text-xs text-ink-soft">
-                Enter the exact count for each bundle. All shortages (RED) trigger a server hard stop.
+              <p className="text-[11px] text-ink-soft">
+                Enter counts. Use <kbd className="font-mono text-[10px] bg-paper px-1 border border-rule">↵</kbd> or <kbd className="font-mono text-[10px] bg-paper px-1 border border-rule">↓</kbd> to cycle rows. Shortages (RED) block the release gate.
               </p>
             </div>
-            <span className="text-xs font-mono font-bold text-ink-soft tabular-nums">
-              {localEvaluation.countedComponents} / {localEvaluation.totalComponents} COUNTED
-            </span>
+
+            {/* Quick Match All Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleQuickMatchAll}
+              className="h-7 text-xs font-bold border-rule bg-paper hover:bg-sheet text-vat flex items-center gap-1 self-start sm:self-auto shrink-0"
+              title="Populate all items with expected quantities"
+            >
+              <Zap className="w-3 h-3 text-vat" />
+              <span>Fill expected all</span>
+            </Button>
           </div>
 
-          <table className="w-full text-left text-sm border-collapse">
+          <table className="w-full text-left text-xs border-collapse">
             <thead className="bg-sheet border-b border-rule">
               <tr>
-                <th className="p-3 pl-4 font-bold text-ink-soft">Component</th>
-                <th className="p-3 text-right font-bold text-ink-soft">Per</th>
-                <th className="p-3 text-right font-bold text-ink-soft">Expected</th>
-                <th className="p-3 text-right font-bold text-ink-soft w-36">
+                <th className="p-2.5 pl-3.5 font-bold text-ink-soft">Component</th>
+                <th className="p-2.5 text-right font-bold text-ink-soft">Per</th>
+                <th className="p-2.5 text-right font-bold text-ink-soft">Expected</th>
+                <th className="p-2.5 text-right font-bold text-ink-soft w-32">
                   Actual count
                 </th>
-                <th className="p-3 text-right font-bold text-ink-soft">Variance</th>
-                <th className="p-3 pr-4 font-bold text-ink-soft">Status</th>
+                <th className="p-2.5 text-right font-bold text-ink-soft">Variance</th>
+                <th className="p-2.5 pr-3.5 font-bold text-ink-soft">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-rule">
-              {items.map((item) => {
+              {items.map((item, index) => {
                 const currentActual = counts[item.componentId];
                 const liveLight = evaluateTrafficLight(currentActual, item.expectedQty);
 
                 return (
                   <tr
                     key={item.componentId}
-                    className="hover:bg-row-hover transition-colors h-16"
+                    className="hover:bg-row-hover transition-colors h-14"
                   >
-                    {/* Component Name and optional Thumbnail */}
-                    <td className="p-3 pl-4">
-                      <div className="flex items-center gap-3">
+                    {/* Component Name & Thumbnail */}
+                    <td className="p-2.5 pl-3.5">
+                      <div className="flex items-center gap-2.5">
                         {item.imageUrl && (
-                          <div className="relative w-10 h-10 shrink-0 bg-sheet rounded-[2px] border border-rule flex items-center justify-center p-1">
+                          <div className="relative w-8 h-8 shrink-0 bg-sheet rounded-[2px] border border-rule flex items-center justify-center p-0.5">
                             <Image
                               src={item.imageUrl}
                               alt={item.name}
-                              width={32}
-                              height={32}
+                              width={24}
+                              height={24}
                               className="object-contain"
                             />
                           </div>
                         )}
-                        <div>
-                          <span className="font-bold text-ink block leading-tight">
-                            {item.name}
-                          </span>
-                        </div>
+                        <span className="font-bold text-ink block leading-tight">
+                          {item.name}
+                        </span>
                       </div>
                     </td>
 
                     {/* Pieces Per Garment */}
-                    <td className="p-3 text-right tabular-nums text-ink-soft">
+                    <td className="p-2.5 text-right tabular-nums text-ink-soft">
                       {item.piecesPerGarment}
                     </td>
 
                     {/* Expected Quantity */}
-                    <td className="p-3 text-right font-display text-xl font-bold tabular-nums text-ink">
+                    <td className="p-2.5 text-right font-display text-base font-bold tabular-nums text-ink">
                       {item.expectedQty}
                     </td>
 
-                    {/* 56px Tall Integer Input (DESIGN.md Section 9.3) */}
-                    <td className="p-3 text-right">
-                      <IntegerInput
-                        tall={true}
-                        value={currentActual}
-                        onChange={(val) => handleCountChange(item.componentId, val)}
-                        disabled={isSaving || isApproving}
-                        placeholder={String(item.expectedQty)}
-                        aria-label={`Count for ${item.name}`}
-                      />
+                    {/* Count Input with auto-advance */}
+                    <td className="p-2.5 text-right">
+                      <div
+                        onKeyDown={(e) => handleKeyDownOnInput(e, index)}
+                      >
+                        <IntegerInput
+                          ref={(el) => {
+                            inputRefs.current[item.componentId] = el;
+                          }}
+                          value={currentActual}
+                          onChange={(val) => handleCountChange(item.componentId, val)}
+                          disabled={isSaving || isApproving}
+                          placeholder={String(item.expectedQty)}
+                          aria-label={`Count for ${item.name}`}
+                          className="h-10 text-right font-display text-base font-bold tabular-nums"
+                        />
+                      </div>
                     </td>
 
                     {/* Live Variance */}
-                    <td className="p-3 text-right font-display text-xl font-bold tabular-nums text-ink">
+                    <td className="p-2.5 text-right font-display text-base font-bold tabular-nums">
                       {liveLight.variance !== null ? (
                         liveLight.variance > 0 ? (
                           <span className="text-excess-fg">+{liveLight.variance}</span>
                         ) : liveLight.variance < 0 ? (
-                          <span className="text-short-fg">{liveLight.variance}</span>
+                          <span className="text-short-fg font-bold">{liveLight.variance}</span>
                         ) : (
-                          <span className="text-match-fg">0</span>
+                          <span className="text-match-fg font-bold">0</span>
                         )
                       ) : (
                         <span className="text-ink-soft">—</span>
@@ -359,7 +409,7 @@ export default function VerificationTerminalPage({
                     </td>
 
                     {/* Status Lamp */}
-                    <td className="p-3 pr-4 whitespace-nowrap">
+                    <td className="p-2.5 pr-3.5 whitespace-nowrap">
                       <Lamp
                         status={liveLight.prismaStatus}
                         variance={liveLight.variance ?? undefined}
@@ -372,9 +422,9 @@ export default function VerificationTerminalPage({
           </table>
         </div>
 
-        {/* Right Column: Fabric Scale, Summary & Gate Actions (Sticky) */}
-        <div className="space-y-6 lg:sticky lg:top-6">
-          {/* Wastage Scale (DESIGN.md Section 8.4) */}
+        {/* Right Column: Wastage Meter & Gate Decision Actions */}
+        <div className="space-y-4 lg:sticky lg:top-4">
+          {/* Wastage Meter */}
           <WastageScale
             actualYds={order.actualFabricYds}
             expectedYds={order.expectedFabricYds}
@@ -382,10 +432,10 @@ export default function VerificationTerminalPage({
             capPct={order.recipe.wastageCap}
           />
 
-          {/* Action Card */}
-          <div className="rounded-[2px] border border-rule bg-paper p-5 space-y-4">
-            <h3 className="text-sm font-bold text-ink uppercase tracking-wider border-b border-rule pb-2">
-              Terminal actions
+          {/* Gate Terminal Actions Card */}
+          <div className="rounded-[2px] border border-rule bg-paper p-4 space-y-3.5">
+            <h3 className="text-xs font-bold text-ink uppercase tracking-wider border-b border-rule pb-2">
+              Workstation actions
             </h3>
 
             {/* Save Counts Button */}
@@ -393,69 +443,65 @@ export default function VerificationTerminalPage({
               variant="secondary"
               onClick={handleSaveCounts}
               disabled={isSaving || isApproving}
-              className="w-full h-12 text-sm font-bold"
+              className="w-full h-10 text-xs font-bold flex items-center justify-center gap-1.5"
             >
-              {isSaving ? "Saving counts..." : isDirty ? "Save counts (Unsaved changes)" : "Save counts"}
+              <Save className="w-3.5 h-3.5" />
+              <span>
+                {isSaving
+                  ? "Saving counts..."
+                  : isDirty
+                  ? "Save counts (Unsaved changes)"
+                  : "Save counts"}
+              </span>
             </Button>
 
-            {/* Approve Batch Button with Server Gate Guard */}
-            <div className="space-y-1.5 pt-2">
+            {/* Approve Batch Button */}
+            <div className="space-y-1.5 pt-1">
               <Button
                 variant="primary"
                 disabled={!canApprove || isSaving || isApproving}
                 onClick={handleApproveBatch}
-                className="w-full h-12 text-base font-bold flex items-center justify-center gap-2"
+                className="w-full h-11 text-xs font-bold flex items-center justify-center gap-1.5"
                 aria-disabled={!canApprove}
-                aria-describedby="approve-helper"
+                aria-describedby="approve-helper-text"
               >
-                {!canApprove && (
-                  <svg
-                    viewBox="0 0 20 20"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zm2 6V6a2 2 0 10-4 0v2h4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                {!canApprove ? (
+                  <Lock className="w-3.5 h-3.5 shrink-0" />
+                ) : (
+                  <Check className="w-3.5 h-3.5 shrink-0" />
                 )}
-                {isApproving ? "Verifying..." : "Approve Batch"}
+                <span>{isApproving ? "Verifying..." : "Approve & release batch"}</span>
               </Button>
 
-              {/* Explanatory text below disabled approve per DESIGN.md Section 9.1 */}
               {!canApprove && (
-                <p id="approve-helper" className="text-xs text-ink-soft text-center pt-1">
+                <p id="approve-helper-text" className="text-[11px] text-ink-soft text-center pt-0.5">
                   {isDirty
-                    ? "Save counts to confirm server gate state."
+                    ? "Save counts to confirm server gate validation."
                     : localEvaluation.shortCount > 0
-                    ? "Gate closed. Resolve the shortage or reject the batch."
+                    ? "Gate closed. Resolve component shortage or reject batch."
                     : localEvaluation.uncountedComponents > 0
-                    ? "Gate closed. Count every component to open it."
+                    ? "Gate closed. Count every component bundle to unlock."
                     : "Gate closed. Server confirmation required."}
                 </p>
               )}
             </div>
 
-            {/* Reject Batch Action */}
+            {/* Reject Batch Trigger */}
             <div className="pt-2 border-t border-rule">
               <Button
                 variant="destructive"
                 onClick={() => setIsRejectOpen(true)}
                 disabled={isSaving || isApproving}
-                className="w-full h-11 text-sm font-bold bg-short-bg text-short-fg hover:bg-short-bg/80 border border-short-edge/40"
+                className="w-full h-9 text-xs font-bold bg-short-bg text-short-fg hover:bg-short-bg/80 border border-short-edge/40"
               >
-                Reject Batch
+                Reject Batch (Return to supervisor)
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Reject Order Modal */}
+      {/* Reject Confirmation Modal */}
       <RejectOrderModal
         open={isRejectOpen}
         onOpenChange={setIsRejectOpen}

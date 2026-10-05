@@ -59,11 +59,25 @@ export const patchOrderSchema = z
     "At least one field must be provided to update the cutting order"
   );
 
-export const listOrdersQuerySchema = z.object({
-  status: z.nativeEnum(OrderStatus).optional(),
-  page: z.coerce.number().int().positive().default(1),
-  pageSize: z.coerce.number().int().positive().max(50).default(20),
-});
+export const listOrdersQuerySchema = z
+  .object({
+    status: z.nativeEnum(OrderStatus).optional(),
+    recipeId: z.string().uuid("Invalid recipe ID format").optional(),
+    q: z
+      .string()
+      .trim()
+      .max(64, "Search query cannot exceed 64 characters")
+      .optional(),
+    sort: z
+      .enum(["createdAt", "orderNo", "targetQty", "actualFabricYds", "wastagePct", "status"])
+      .default("createdAt"),
+    dir: z.enum(["asc", "desc"]).default("desc"),
+    from: z.string().optional(),
+    to: z.string().optional(),
+    page: z.coerce.number().int().positive().default(1),
+    pageSize: z.coerce.number().int().positive().max(50).default(20),
+  })
+  .strict();
 
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
 export type PatchOrderInput = z.infer<typeof patchOrderSchema>;

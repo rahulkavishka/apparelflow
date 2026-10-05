@@ -89,23 +89,61 @@ export async function createCuttingOrder(actor: Actor, input: CreateOrderInput) 
   });
 }
 
+export interface ListOrdersOpts {
+  status?: OrderStatus;
+  recipeId?: string;
+  q?: string;
+  sort?: "createdAt" | "orderNo" | "targetQty" | "actualFabricYds" | "wastagePct" | "status";
+  dir?: "asc" | "desc";
+  from?: string;
+  to?: string;
+  page?: number;
+  pageSize?: number;
+}
+
 export async function listCuttingOrders(
   actor: Actor,
-  opts: { status?: OrderStatus; page?: number; pageSize?: number }
+  opts: ListOrdersOpts = {}
 ) {
   if (actor.role !== Role.cutting_supervisor) {
     throw new ForbiddenError("Only cutting supervisors can access cutting orders");
   }
 
-  const page = opts.page || 1;
+  const page = Math.max(1, opts.page || 1);
   const pageSize = Math.min(opts.pageSize || 20, 50);
   const skip = (page - 1) * pageSize;
 
+  const baseWhere: Record<string, unknown> = {};
+  if (opts.recipeId) baseWhere.recipeId = opts.recipeId;
+  if (opts.q) {
+    baseWhere.OR = [
+      { orderNo: { contains: opts.q, mode: "insensitive" } },
+      { fabricRollId: { contains: opts.q, mode: "insensitive" } },
+      { recipe: { name: { contains: opts.q, mode: "insensitive" } } },
+      { recipe: { recipeCode: { contains: opts.q, mode: "insensitive" } } },
+    ];
+  }
+  if (opts.from || opts.to) {
+    const dateFilter: Record<string, Date> = {};
+    if (opts.from) dateFilter.gte = new Date(opts.from);
+    if (opts.to) dateFilter.lte = new Date(opts.to);
+    baseWhere.createdAt = dateFilter;
+  }
+
   const where = {
+    ...baseWhere,
     ...(opts.status ? { status: opts.status } : {}),
   };
 
-  const [orders, total] = await Promise.all([
+  let orderBy: Record<string, "asc" | "desc"> = { createdAt: "desc" };
+  const direction = opts.dir || "desc";
+  if (opts.sort === "orderNo") orderBy = { orderNo: direction };
+  else if (opts.sort === "targetQty") orderBy = { targetQty: direction };
+  else if (opts.sort === "actualFabricYds") orderBy = { actualFabricYds: direction };
+  else if (opts.sort === "status") orderBy = { status: direction };
+  else if (opts.sort === "createdAt") orderBy = { createdAt: direction };
+
+  const [orders, total, statusGroups] = await Promise.all([
     prisma.cuttingOrder.findMany({
       where,
       include: {
@@ -127,12 +165,31 @@ export async function listCuttingOrders(
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy,
       skip,
       take: pageSize,
     }),
     prisma.cuttingOrder.count({ where }),
+    prisma.cuttingOrder.groupBy({
+      by: ["status"],
+      where: baseWhere,
+      _count: { status: true },
+    }),
   ]);
+
+  const counts: Record<string, number> = {
+    ALL: 0,
+    CUTTING_IN_PROGRESS: 0,
+    PENDING_VERIFICATION: 0,
+    REJECTED: 0,
+    VERIFIED: 0,
+  };
+  for (const g of statusGroups) {
+    if (g.status in counts) {
+      counts[g.status] = g._count.status;
+      counts.ALL += g._count.status;
+    }
+  }
 
   return {
     orders: orders.map((o) => {
@@ -168,6 +225,7 @@ export async function listCuttingOrders(
       pageSize,
       total,
       totalPages: Math.ceil(total / pageSize),
+      counts,
     },
   };
 }
@@ -258,51 +316,56 @@ export async function updateCuttingOrder(
     throw new ForbiddenError("Only cutting supervisors can edit cutting orders");
   }
 
-  return prisma.$transaction(async (tx) => {
-    const order = await tx.cuttingOrder.findUnique({
-      where: { id: orderId },
-      include: {
-        recipe: { include: { components: true } },
-        items: true,
-      },
-    });
+  return prisma.$transaction(
+    async (tx) => {
+      const order = await tx.cuttingOrder.findUnique({
+        where: { id: orderId },
+        include: {
+          recipe: { include: { components: true } },
+          items: true,
+        },
+      });
 
-    if (!order) {
-      throw new NotFoundError("Cutting order not found");
-    }
-
-    if (order.status !== OrderStatus.CUTTING_IN_PROGRESS) {
-      throw new ConflictError(
-        "INVALID_STATE_TRANSITION",
-        `Only orders in CUTTING_IN_PROGRESS can be edited. Current status is ${order.status}`
-      );
-    }
-
-    // If target quantity changed, update expected quantity on verification items
-    if (input.targetQty !== undefined && input.targetQty !== order.targetQty) {
-      for (const item of order.items) {
-        const comp = order.recipe.components.find((c) => c.id === item.componentId);
-        if (comp) {
-          const newExpected = calculateExpectedPieces(input.targetQty, comp.piecesPerGarment);
-          await tx.verificationItem.update({
-            where: { id: item.id },
-            data: { expectedQty: newExpected },
-          });
-        }
+      if (!order) {
+        throw new NotFoundError("Cutting order not found");
       }
-    }
 
-    const updated = await tx.cuttingOrder.update({
-      where: { id: orderId },
-      data: {
-        ...(input.targetQty !== undefined ? { targetQty: input.targetQty } : {}),
-        ...(input.fabricRollId !== undefined ? { fabricRollId: input.fabricRollId } : {}),
-        ...(input.actualFabricYds !== undefined ? { actualFabricYds: input.actualFabricYds } : {}),
-      },
-    });
+      if (order.status !== OrderStatus.CUTTING_IN_PROGRESS) {
+        throw new ConflictError(
+          "INVALID_STATE_TRANSITION",
+          `Only orders in CUTTING_IN_PROGRESS can be edited. Current status is ${order.status}`
+        );
+      }
 
-    return updated;
-  });
+      // If target quantity changed, update expected quantity on verification items in parallel
+      if (input.targetQty !== undefined && input.targetQty !== order.targetQty) {
+        const updatePromises = order.items.map((item) => {
+          const comp = order.recipe.components.find((c) => c.id === item.componentId);
+          if (comp) {
+            const newExpected = calculateExpectedPieces(input.targetQty!, comp.piecesPerGarment);
+            return tx.verificationItem.update({
+              where: { id: item.id },
+              data: { expectedQty: newExpected },
+            });
+          }
+          return Promise.resolve();
+        });
+        await Promise.all(updatePromises);
+      }
+
+      const updated = await tx.cuttingOrder.update({
+        where: { id: orderId },
+        data: {
+          ...(input.targetQty !== undefined ? { targetQty: input.targetQty } : {}),
+          ...(input.fabricRollId !== undefined ? { fabricRollId: input.fabricRollId } : {}),
+          ...(input.actualFabricYds !== undefined ? { actualFabricYds: input.actualFabricYds } : {}),
+        },
+      });
+
+      return updated;
+    },
+    { timeout: 15000, maxWait: 10000 }
+  );
 }
 
 export async function submitCuttingOrder(actor: Actor, orderId: string) {

@@ -5,10 +5,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RecipeCombobox } from "@/components/domain/RecipeCombobox";
 import { IntegerInput } from "@/components/domain/IntegerInput";
+import { DecimalInput } from "@/components/domain/DecimalInput";
 import { expectedFabric, wastagePct, isOverWastageCap } from "@/domain/wastage";
 import { deriveExpectedComponents } from "@/domain/multiplier";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface RecipeDto {
@@ -40,20 +42,24 @@ export function CreateOrderModal({
   onOrderCreated,
 }: CreateOrderModalProps) {
   const [selectedRecipeId, setSelectedRecipeId] = useState<string>("");
-  const [targetQty, setTargetQty] = useState<number | null>(50);
-  const [fabricRollId, setFabricRollId] = useState<string>("FAB-ROLL-882");
-  const [actualFabricYds, setActualFabricYds] = useState<string>("94.50");
+  const [targetQty, setTargetQty] = useState<number | null>(null);
+  const [fabricRollId, setFabricRollId] = useState<string>("");
+  const [actualFabricYds, setActualFabricYds] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialize selected recipe when recipes load
+  // Reset form when modal opens
   useEffect(() => {
-    if (recipes.length > 0 && !selectedRecipeId) {
-      setSelectedRecipeId(recipes[0].id);
+    if (open) {
+      setSelectedRecipeId("");
+      setTargetQty(null);
+      setFabricRollId("");
+      setActualFabricYds("");
+      setErrors({});
     }
-  }, [recipes, selectedRecipeId]);
+  }, [open]);
 
-  const activeRecipe = recipes.find((r) => r.id === selectedRecipeId) || recipes[0];
+  const activeRecipe = recipes.find((r) => r.id === selectedRecipeId);
 
   // Derived calculations for right column preview
   const validQty = targetQty && targetQty > 0 ? targetQty : 0;
@@ -161,24 +167,17 @@ export function CreateOrderModal({
               <Label htmlFor="recipe-select" className="text-sm font-bold text-ink">
                 Recipe
               </Label>
-              <Select
+              <RecipeCombobox
+                id="recipe-select"
+                recipes={recipes}
                 value={selectedRecipeId}
-                onValueChange={(val) => {
+                onChange={(val) => {
                   setSelectedRecipeId(val);
                   setErrors((prev) => ({ ...prev, recipeId: "" }));
                 }}
-              >
-                <SelectTrigger id="recipe-select">
-                  <SelectValue placeholder="Choose a recipe" />
-                </SelectTrigger>
-                <SelectContent>
-                  {recipes.map((r) => (
-                    <SelectItem key={r.id} value={r.id}>
-                      {r.name} ({r.recipeCode})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Search and select a recipe..."
+                disabled={isSubmitting}
+              />
               {errors.recipeId && (
                 <p className="text-xs text-short-fg font-medium">{errors.recipeId}</p>
               )}
@@ -227,12 +226,11 @@ export function CreateOrderModal({
               <Label htmlFor="fabric-used" className="text-sm font-bold text-ink">
                 Actual fabric used (yards)
               </Label>
-              <Input
+              <DecimalInput
                 id="fabric-used"
-                type="text"
                 value={actualFabricYds}
-                onChange={(e) => {
-                  setActualFabricYds(e.target.value);
+                onChange={(val) => {
+                  setActualFabricYds(val);
                   setErrors((prev) => ({ ...prev, actualFabricYds: "" }));
                 }}
                 placeholder="94.50"
@@ -279,7 +277,9 @@ export function CreateOrderModal({
                   {expectedComponents.length === 0 && (
                     <tr>
                       <td colSpan={3} className="p-4 text-center text-ink-soft">
-                        Enter a valid target quantity to preview components.
+                        {!selectedRecipeId
+                          ? "Select a recipe and enter quantity to preview components."
+                          : "Enter a valid target quantity to preview components."}
                       </td>
                     </tr>
                   )}
@@ -316,7 +316,7 @@ export function CreateOrderModal({
                     {wastage > 0 ? `+${wastage.toFixed(2)}%` : `${wastage.toFixed(2)}%`}
                   </span>
                   <div className="text-[10px] text-ink-soft">
-                    {isOverCap
+                    {isOverCap && activeRecipe
                       ? `Over cap by ${(wastage - activeRecipe.wastageCap).toFixed(1)} points (batch can proceed)`
                       : "Within cap"}
                   </div>
@@ -348,8 +348,16 @@ export function CreateOrderModal({
             variant="primary"
             disabled={isSubmitting}
             onClick={() => handleCreate(true)}
+            className="flex items-center gap-1.5"
           >
-            {isSubmitting ? "Creating..." : "Send to verification"}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-paper" />
+                <span>Creating order...</span>
+              </>
+            ) : (
+              "Send to verification"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

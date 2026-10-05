@@ -8,16 +8,44 @@ export interface IntegerInputProps
   tall?: boolean; // 56px for Verification Terminal
 }
 
+const ALLOWED_CONTROL_KEYS = new Set([
+  "Backspace",
+  "Delete",
+  "ArrowLeft",
+  "ArrowRight",
+  "ArrowUp",
+  "ArrowDown",
+  "Tab",
+  "Home",
+  "End",
+  "Enter",
+  "Escape",
+]);
+
 export const IntegerInput = forwardRef<HTMLInputElement, IntegerInputProps>(
   ({ value, onChange, tall = false, className, onKeyDown, onPaste, ...props }, ref) => {
     const stringValue =
       value === null || value === undefined || value === "" ? "" : String(value);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      // Block exponential, decimal points, signs, commas
-      if (["e", "E", "+", "-", ".", ","].includes(e.key)) {
-        e.preventDefault();
+      // Allow shortcuts like Ctrl+A, Ctrl+C, Ctrl+V, etc.
+      if (e.ctrlKey || e.metaKey || e.altKey) {
+        onKeyDown?.(e);
+        return;
       }
+
+      // Allow navigation and editing control keys
+      if (ALLOWED_CONTROL_KEYS.has(e.key)) {
+        onKeyDown?.(e);
+        return;
+      }
+
+      // Block all non-digit keys (letters, symbols, punctuation, spaces)
+      if (!/^[0-9]$/.test(e.key)) {
+        e.preventDefault();
+        return;
+      }
+
       onKeyDown?.(e);
     };
 

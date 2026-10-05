@@ -1,12 +1,14 @@
 import { cn } from "@/lib/utils";
 
+/** Static placeholder block (DESIGN §9.7: no shimmer, uses `sheet`/`rule` tokens). */
 function Skeleton({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("animate-pulse rounded-md bg-slate-200", className)}
+      aria-hidden="true"
+      className={cn("rounded-[2px] bg-rule/60", className)}
       {...props}
     />
   );

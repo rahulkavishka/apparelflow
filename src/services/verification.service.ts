@@ -71,47 +71,65 @@ export interface VerificationOrderDto {
   };
 }
 
-/**
- * Lists all orders awaiting verification (status: PENDING_VERIFICATION).
- */
-export async function listVerificationQueue(): Promise<
-  Array<{
-    id: string;
-    orderNo: string;
-    status: OrderStatus;
-    targetQty: number;
-    fabricRollId: string;
-    submittedAt: string | null;
-    recipe: {
-      recipeCode: string;
-      name: string;
-    };
-    createdBy: {
-      fullName: string;
-    };
-    totalItems: number;
-    countedItems: number;
-  }>
-> {
-  const orders = await prisma.cuttingOrder.findMany({
-    where: { status: OrderStatus.PENDING_VERIFICATION },
-    include: {
-      recipe: {
-        select: { recipeCode: true, name: true },
-      },
-      createdBy: {
-        select: { fullName: true },
-      },
-      items: {
-        select: { actualQty: true },
-      },
-    },
-    orderBy: { submittedAt: "asc" },
-  });
+export interface ListQueueOpts {
+  q?: string;
+  sort?: "submittedAt" | "orderNo" | "targetQty";
+  dir?: "asc" | "desc";
+  page?: number;
+  pageSize?: number;
+}
 
-  return orders.map((o) => {
-    const total = o.items.length;
-    const counted = o.items.filter((i) => i.actualQty !== null).length;
+/**
+ * Lists all orders awaiting verification (status: PENDING_VERIFICATION) with search, sort, and pagination.
+ */
+export async function listVerificationQueue(opts: ListQueueOpts = {}) {
+  const page = Math.max(1, opts.page || 1);
+  const pageSize = opts.pageSize ? Math.min(opts.pageSize, 100) : 50;
+  const skip = (page - 1) * pageSize;
+
+  const where: Record<string, unknown> = {
+    status: OrderStatus.PENDING_VERIFICATION,
+  };
+
+  if (opts.q) {
+    where.OR = [
+      { orderNo: { contains: opts.q, mode: "insensitive" } },
+      { fabricRollId: { contains: opts.q, mode: "insensitive" } },
+      { recipe: { name: { contains: opts.q, mode: "insensitive" } } },
+      { recipe: { recipeCode: { contains: opts.q, mode: "insensitive" } } },
+    ];
+  }
+
+  let orderBy: Record<string, "asc" | "desc"> = { submittedAt: "asc" };
+  const direction = opts.dir || "asc";
+  if (opts.sort === "orderNo") orderBy = { orderNo: direction };
+  else if (opts.sort === "targetQty") orderBy = { targetQty: direction };
+  else if (opts.sort === "submittedAt") orderBy = { submittedAt: direction };
+
+  const [orders, total] = await Promise.all([
+    prisma.cuttingOrder.findMany({
+      where,
+      include: {
+        recipe: {
+          select: { recipeCode: true, name: true },
+        },
+        createdBy: {
+          select: { fullName: true },
+        },
+        items: {
+          select: { actualQty: true },
+        },
+      },
+      orderBy,
+      skip,
+      take: pageSize,
+    }),
+    prisma.cuttingOrder.count({ where }),
+  ]);
+
+  const queue = orders.map((o) => {
+    const totalItems = o.items.length;
+    const countedItems = o.items.filter((i) => i.actualQty !== null).length;
     return {
       id: o.id,
       orderNo: o.orderNo,
@@ -121,10 +139,21 @@ export async function listVerificationQueue(): Promise<
       submittedAt: o.submittedAt ? o.submittedAt.toISOString() : null,
       recipe: o.recipe,
       createdBy: o.createdBy,
-      totalItems: total,
-      countedItems: counted,
+      totalItems,
+      countedItems,
     };
   });
+
+  return {
+    queue,
+    total,
+    meta: {
+      page,
+      pageSize,
+      total,
+      totalPages: Math.ceil(total / pageSize),
+    },
+  };
 }
 
 /**
@@ -530,33 +559,70 @@ export async function rejectVerificationOrder(
   };
 }
 
+export interface ListLogsOpts {
+  q?: string;
+  decision?: "APPROVED" | "REJECTED" | "ALL";
+  from?: string;
+  to?: string;
+  page?: number;
+  pageSize?: number;
+}
+
 /**
- * Lists history of past verification decisions.
+ * Lists history of past verification decisions with search, decision filter, and pagination.
  */
-export async function listVerificationHistory() {
-  const logs = await prisma.verificationLog.findMany({
-    include: {
-      verifier: {
-        select: { id: true, fullName: true, role: true },
-      },
-      order: {
-        select: {
-          id: true,
-          orderNo: true,
-          targetQty: true,
-          fabricRollId: true,
-          status: true,
-          recipe: {
-            select: { recipeCode: true, name: true, wastageCap: true },
+export async function listVerificationHistory(opts: ListLogsOpts = {}) {
+  const page = Math.max(1, opts.page || 1);
+  const pageSize = Math.min(opts.pageSize || 20, 50);
+  const skip = (page - 1) * pageSize;
+
+  const where: Record<string, unknown> = {};
+  if (opts.decision && opts.decision !== "ALL") {
+    where.decision = opts.decision;
+  }
+  if (opts.q) {
+    where.OR = [
+      { order: { orderNo: { contains: opts.q, mode: "insensitive" } } },
+      { order: { fabricRollId: { contains: opts.q, mode: "insensitive" } } },
+      { order: { recipe: { name: { contains: opts.q, mode: "insensitive" } } } },
+      { order: { recipe: { recipeCode: { contains: opts.q, mode: "insensitive" } } } },
+    ];
+  }
+  if (opts.from || opts.to) {
+    const dateFilter: Record<string, Date> = {};
+    if (opts.from) dateFilter.gte = new Date(opts.from);
+    if (opts.to) dateFilter.lte = new Date(opts.to);
+    where.timestamp = dateFilter;
+  }
+
+  const [logs, total] = await Promise.all([
+    prisma.verificationLog.findMany({
+      where,
+      include: {
+        verifier: {
+          select: { id: true, fullName: true, role: true },
+        },
+        order: {
+          select: {
+            id: true,
+            orderNo: true,
+            targetQty: true,
+            fabricRollId: true,
+            status: true,
+            recipe: {
+              select: { recipeCode: true, name: true, wastageCap: true },
+            },
           },
         },
       },
-    },
-    orderBy: { timestamp: "desc" },
-    take: 50,
-  });
+      orderBy: { timestamp: "desc" },
+      skip,
+      take: pageSize,
+    }),
+    prisma.verificationLog.count({ where }),
+  ]);
 
-  return logs.map((log) => ({
+  const formattedLogs = logs.map((log) => ({
     id: log.id,
     orderId: log.orderId,
     orderNo: log.order.orderNo,
@@ -574,4 +640,15 @@ export async function listVerificationHistory() {
     timestamp: log.timestamp.toISOString(),
     verifier: log.verifier,
   }));
+
+  return {
+    logs: formattedLogs,
+    total,
+    meta: {
+      page,
+      pageSize,
+      total,
+      totalPages: Math.ceil(total / pageSize),
+    },
+  };
 }

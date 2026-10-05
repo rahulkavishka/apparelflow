@@ -1,305 +1,668 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Stamp } from "@/components/domain/Stamp";
+import { OrderNo } from "@/components/domain/OrderNo";
 import { CreateOrderModal } from "@/components/domain/CreateOrderModal";
+import { RecipeCombobox } from "@/components/domain/RecipeCombobox";
+import { KPICard } from "@/components/ui/KPICard";
+import { FilterChips, FilterChipOption } from "@/components/ui/FilterChips";
+import { Pagination } from "@/components/ui/Pagination";
+import { SelectionBar } from "@/components/ui/SelectionBar";
+import { DensityToggle, TableDensity } from "@/components/ui/DensityToggle";
+import { TableLoadingRow } from "@/components/ui/LoadingSpinner";
+import { PeekDrawer, PeekDrawerData } from "@/components/domain/PeekDrawer";
+import { useOrdersList, useSubmitOrder, useRecutOrder } from "@/hooks/useOrders";
+import { useRecipesList } from "@/hooks/useRecipes";
 import { toast } from "sonner";
 import { OrderStatus } from "@prisma/client";
+import {
+  Search,
+  Plus,
+  Scissors,
+  Clock,
+  AlertTriangle,
+  CheckCircle2,
+  FileSpreadsheet,
+  Send,
+} from "lucide-react";
 
-interface OrderListItem {
-  id: string;
-  orderNo: string;
-  status: OrderStatus;
-  targetQty: number;
-  fabricRollId: string;
-  actualFabricYds: number;
-  expectedFabricYds: number;
-  wastagePct: number;
-  recipe: {
-    id: string;
-    recipeCode: string;
-    name: string;
-    wastageCap: number;
-  };
-  createdBy: {
-    id: string;
-    fullName: string;
-  };
-  createdAt: string;
-  submittedAt: string | null;
-  verifiedAt: string | null;
-  lastRejectionReason: string | null;
-}
+function SupervisorOrdersContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-interface RecipeDto {
-  id: string;
-  recipeCode: string;
-  name: string;
-  category: string;
-  stdFabricYards: number;
-  wastageCap: number;
-  components: {
-    id: string;
-    componentName: string;
-    piecesPerGarment: number;
-    imageUrl?: string | null;
-  }[];
-}
+  // Read URL query parameters
+  const statusParam = searchParams.get("status") as OrderStatus | null;
+  const recipeParam = searchParams.get("recipeId") || "ALL";
+  const searchParam = searchParams.get("q") || "";
+  const pageParam = parseInt(searchParams.get("page") || "1", 10);
+  const pageSizeParam = parseInt(searchParams.get("pageSize") || "10", 10);
 
-export default function SupervisorOrdersPage() {
-  const [orders, setOrders] = useState<OrderListItem[]>([]);
-  const [recipes, setRecipes] = useState<RecipeDto[]>([]);
-  const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  // Synchronized state - default pageSize is 10
+  const [selectedStatus, setSelectedStatus] = useState<OrderStatus | "ALL">(
+    statusParam && ["CUTTING_IN_PROGRESS", "PENDING_VERIFICATION", "REJECTED", "VERIFIED"].includes(statusParam)
+      ? statusParam
+      : "ALL"
+  );
+  const [selectedRecipeId, setSelectedRecipeId] = useState<string>(recipeParam);
+  const [searchQuery, setSearchQuery] = useState(searchParam);
+  const [page, setPage] = useState(pageParam || 1);
+  const [pageSize, setPageSize] = useState(pageSizeParam || 10);
+  const [sortField, setSortField] = useState<"createdAt" | "orderNo" | "targetQty" | "actualFabricYds" | "status">("createdAt");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [density, setDensity] = useState<TableDensity>("compact");
 
-  const fetchRecipes = async () => {
-    try {
-      const res = await fetch("/api/recipes");
-      const json = await res.json();
-      if (res.ok) {
-        setRecipes(json.data);
-      }
-    } catch {
-      toast.error("Failed to load recipes");
-    }
-  };
+  // Selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const fetchOrders = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const query = selectedStatus !== "ALL" ? `?status=${selectedStatus}` : "";
-      const res = await fetch(`/api/orders${query}`);
-      const json = await res.json();
-      if (res.ok) {
-        setOrders(json.data.orders);
-      } else {
-        toast.error(json.error?.message || "Failed to load cutting orders");
-      }
-    } catch {
-      toast.error("Network error loading orders");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedStatus]);
+  // Modal & Drawer states
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [peekData, setPeekData] = useState<PeekDrawerData | null>(null);
 
+  // Sync state when URL searchParams change
   useEffect(() => {
-    fetchRecipes();
+    const currentStatus = searchParams.get("status") as OrderStatus | null;
+    if (currentStatus && ["CUTTING_IN_PROGRESS", "PENDING_VERIFICATION", "REJECTED", "VERIFIED"].includes(currentStatus)) {
+      setSelectedStatus(currentStatus);
+    } else if (!currentStatus) {
+      setSelectedStatus("ALL");
+    }
+
+    const currentRecipe = searchParams.get("recipeId") || "ALL";
+    setSelectedRecipeId(currentRecipe);
+
+    const currentQ = searchParams.get("q") || "";
+    setSearchQuery(currentQ);
+
+    const currentPage = parseInt(searchParams.get("page") || "1", 10);
+    setPage(currentPage || 1);
+
+    const currentPageSize = parseInt(searchParams.get("pageSize") || "10", 10);
+    setPageSize(currentPageSize || 10);
+  }, [searchParams]);
+
+  // Update URL helper
+  const updateUrlParams = useCallback(
+    (updates: { status?: string; recipeId?: string; q?: string; page?: number; pageSize?: number }) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (updates.status !== undefined) {
+        if (updates.status && updates.status !== "ALL") params.set("status", updates.status);
+        else params.delete("status");
+      }
+      if (updates.recipeId !== undefined) {
+        if (updates.recipeId && updates.recipeId !== "ALL") params.set("recipeId", updates.recipeId);
+        else params.delete("recipeId");
+      }
+      if (updates.q !== undefined) {
+        if (updates.q.trim()) params.set("q", updates.q.trim());
+        else params.delete("q");
+      }
+      if (updates.page !== undefined) {
+        if (updates.page > 1) params.set("page", String(updates.page));
+        else params.delete("page");
+      }
+      if (updates.pageSize !== undefined) {
+        if (updates.pageSize !== 10) params.set("pageSize", String(updates.pageSize));
+        else params.delete("pageSize");
+      }
+
+      const qs = params.toString();
+      router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+    },
+    [router, pathname, searchParams]
+  );
+
+  // Queries & Mutations
+  const { data: recipesData } = useRecipesList();
+  const recipes = recipesData || [];
+
+  const { data, isLoading } = useOrdersList({
+    status: selectedStatus,
+    recipeId: selectedRecipeId !== "ALL" ? selectedRecipeId : undefined,
+    q: searchQuery ? searchQuery.trim() : undefined,
+    sort: sortField,
+    dir: sortDir,
+    page,
+    pageSize,
+  });
+
+  const orders = data?.orders || [];
+  const meta = data?.meta || {
+    page: 1,
+    pageSize: 10,
+    total: 0,
+    totalPages: 1,
+    counts: { ALL: 0, CUTTING_IN_PROGRESS: 0, PENDING_VERIFICATION: 0, REJECTED: 0, VERIFIED: 0 },
+  };
+
+  const submitOrderMutation = useSubmitOrder();
+  const recutOrderMutation = useRecutOrder();
+
+  // Reset page and selection when filters change
+  const handleStatusChange = (status: OrderStatus | "ALL") => {
+    setSelectedStatus(status);
+    setPage(1);
+    setSelectedIds(new Set());
+    updateUrlParams({ status, page: 1 });
+  };
+
+  const handleRecipeChange = (recipeId: string) => {
+    setSelectedRecipeId(recipeId);
+    setPage(1);
+    setSelectedIds(new Set());
+    updateUrlParams({ recipeId, page: 1 });
+  };
+
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
+    setPage(1);
+    updateUrlParams({ q: val, page: 1 });
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    updateUrlParams({ page: newPage });
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setPage(1);
+    updateUrlParams({ pageSize: newPageSize, page: 1 });
+  };
+
+  // Keyboard shortcut: / focuses search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "/" && !["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName)) {
+        e.preventDefault();
+        const searchInput = document.getElementById("order-search-input");
+        searchInput?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+  // Row selection handlers
+  const handleToggleSelectRow = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
-  const handleSubmitOrder = async (orderId: string, orderNo: string) => {
-    setActionLoadingId(orderId);
+  const handleToggleSelectAll = () => {
+    if (selectedIds.size === orders.length && orders.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(orders.map((o) => o.id)));
+    }
+  };
+
+  // Single order actions
+  const handleSubmitSingle = async (e: React.MouseEvent, orderId: string, orderNo: string) => {
+    e.stopPropagation();
     try {
-      const res = await fetch(`/api/orders/${orderId}/submit`, {
-        method: "POST",
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error?.message || "Failed to submit order");
-
-      toast.success(`Cutting order ${orderNo} sent to verification.`);
-      fetchOrders();
+      await submitOrderMutation.mutateAsync(orderId);
+      toast.success(`Cutting order ${orderNo} sent to verification gate.`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to submit order";
       toast.error(msg);
-    } finally {
-      setActionLoadingId(null);
     }
   };
 
-  const handleRecutOrder = async (orderId: string, orderNo: string) => {
-    setActionLoadingId(orderId);
+  const handleRecutSingle = async (e: React.MouseEvent, orderId: string, orderNo: string) => {
+    e.stopPropagation();
     try {
-      const res = await fetch(`/api/orders/${orderId}/recut`, {
-        method: "POST",
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error?.message || "Failed to initiate re-cut");
-
-      toast.success(`Order ${orderNo} returned to cutting in progress for re-cut.`);
-      fetchOrders();
+      await recutOrderMutation.mutateAsync(orderId);
+      toast.success(`Order ${orderNo} reset to cutting in progress for re-cut.`);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to initiate re-cut";
+      const msg = err instanceof Error ? err.message : "Failed to trigger re-cut";
       toast.error(msg);
-    } finally {
-      setActionLoadingId(null);
     }
   };
+
+  // Bulk actions
+  const handleBulkSubmit = async () => {
+    const draftOrders = orders.filter(
+      (o) => selectedIds.has(o.id) && o.status === OrderStatus.CUTTING_IN_PROGRESS
+    );
+
+    if (draftOrders.length === 0) {
+      toast.error("None of the selected orders are in 'Cutting in progress' draft state.");
+      return;
+    }
+
+    let successCount = 0;
+    for (const order of draftOrders) {
+      try {
+        await submitOrderMutation.mutateAsync(order.id);
+        successCount++;
+      } catch {
+        // Continue with others
+      }
+    }
+
+    toast.success(`Sent ${successCount} order(s) to verification gate.`);
+    setSelectedIds(new Set());
+  };
+
+  const handleExportCSV = () => {
+    const exportData = orders.filter((o) => selectedIds.size === 0 || selectedIds.has(o.id));
+    if (exportData.length === 0) return;
+
+    const headers = ["Order No", "Recipe Code", "Recipe Name", "Quantity", "Roll ID", "Fabric Yards", "Wastage %", "Status", "Created At"];
+    const rows = exportData.map((o) => [
+      o.orderNo,
+      o.recipe.recipeCode,
+      `"${o.recipe.name}"`,
+      o.targetQty,
+      o.fabricRollId,
+      o.actualFabricYds.toFixed(2),
+      o.wastagePct.toFixed(2),
+      o.status,
+      new Date(o.createdAt).toISOString(),
+    ]);
+
+    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `apparelflow_orders_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success(`Exported ${exportData.length} cutting order(s) to CSV.`);
+  };
+
+  // Status Filter Options with live counts
+  const statusOptions: FilterChipOption<OrderStatus | "ALL">[] = [
+    { value: "ALL", label: "All orders", count: meta.counts.ALL },
+    {
+      value: OrderStatus.CUTTING_IN_PROGRESS,
+      label: "In progress",
+      count: meta.counts.CUTTING_IN_PROGRESS,
+    },
+    {
+      value: OrderStatus.PENDING_VERIFICATION,
+      label: "Pending gate",
+      count: meta.counts.PENDING_VERIFICATION,
+    },
+    {
+      value: OrderStatus.REJECTED,
+      label: "Rejected",
+      count: meta.counts.REJECTED,
+      badgeVariant: meta.counts.REJECTED > 0 ? "short" : "default",
+    },
+    {
+      value: OrderStatus.VERIFIED,
+      label: "Verified",
+      count: meta.counts.VERIFIED,
+      badgeVariant: "match",
+    },
+  ];
+
+  // Visual density styling
+  const cellPaddingClass = density === "compact" ? "py-2 px-3 text-xs" : "py-3.5 px-3.5 text-sm";
+  const headerPaddingClass = density === "compact" ? "py-2 px-3 text-xs" : "py-3 px-3.5 text-xs";
 
   return (
-    <div className="space-y-6">
-      {/* Page Title & Main Action Bar */}
+    <div className="space-y-5">
+      {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-semibold text-ink">
+          <h1 className="font-display text-2xl font-bold text-ink">
             Cutting orders
           </h1>
-          <p className="text-sm text-ink-soft">
-            Manage cutting batches, derive expected parts, and send bundles to verification.
+          <p className="text-xs text-ink-soft mt-0.5">
+            Manage cutting batches, track component multipliers, and submit to verification.
           </p>
         </div>
 
         <Button
           variant="primary"
-          onClick={() => setIsModalOpen(true)}
-          className="text-base font-bold shrink-0"
+          onClick={() => setIsCreateModalOpen(true)}
+          className="flex items-center gap-1.5 self-start sm:self-auto h-9 text-xs font-bold bg-vat text-paper hover:bg-vat/90"
         >
-          Create cutting order
+          <Plus className="w-4 h-4" />
+          <span>Create cutting order</span>
         </Button>
       </div>
 
-      {/* Filter Toolbar */}
-      <div className="flex items-center gap-3">
-        <span className="text-sm font-bold text-ink">Status</span>
-        <div className="w-56">
-          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-            <SelectTrigger className="h-10 text-sm font-medium">
-              <SelectValue placeholder="All statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">All orders</SelectItem>
-              <SelectItem value="CUTTING_IN_PROGRESS">Cutting</SelectItem>
-              <SelectItem value="PENDING_VERIFICATION">Pending verification</SelectItem>
-              <SelectItem value="REJECTED">Rejected</SelectItem>
-              <SelectItem value="VERIFIED">Verified</SelectItem>
-            </SelectContent>
-          </Select>
+      {/* KPI Metric Strip */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <KPICard
+          label="Active orders"
+          value={meta.counts.ALL}
+          subtext="Total factory batches"
+          icon={<Scissors className="w-4 h-4" />}
+        />
+        <KPICard
+          label="Cutting in progress"
+          value={meta.counts.CUTTING_IN_PROGRESS}
+          subtext="Draft batches on tables"
+          icon={<Clock className="w-4 h-4" />}
+        />
+        <KPICard
+          label="Awaiting verification"
+          value={meta.counts.PENDING_VERIFICATION}
+          subtext="Queue backlog at gate"
+          icon={<Clock className="w-4 h-4 text-vat" />}
+        />
+        <KPICard
+          label="Verified for sewing"
+          value={meta.counts.VERIFIED}
+          subtext="Passed quality gate audit"
+          icon={<CheckCircle2 className="w-4 h-4 text-match-fg" />}
+          variant="positive"
+        />
+      </div>
+
+      {/* Filter Tabs / Chips Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-rule pb-3">
+        <FilterChips
+          options={statusOptions}
+          value={selectedStatus}
+          onChange={handleStatusChange}
+        />
+
+        <div className="flex items-center gap-2">
+          <DensityToggle density={density} onChange={setDensity} />
         </div>
       </div>
 
-      {/* Orders Table */}
-      <div className="border border-rule rounded-[2px] bg-paper overflow-x-auto shadow-none">
-        <table className="w-full text-left text-sm border-collapse">
-          <thead className="bg-sheet border-b border-rule">
-            <tr>
-              <th className="p-3.5 pl-4 font-bold text-ink-soft">Order</th>
-              <th className="p-3.5 font-bold text-ink-soft">Recipe</th>
-              <th className="p-3.5 text-right font-bold text-ink-soft">Qty</th>
-              <th className="p-3.5 font-bold text-ink-soft">Fabric roll</th>
-              <th className="p-3.5 text-right font-bold text-ink-soft">Fabric yds</th>
-              <th className="p-3.5 font-bold text-ink-soft">Status</th>
-              <th className="p-3.5 pr-4 text-right font-bold text-ink-soft">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-rule">
-            {isLoading ? (
-              <tr>
-                <td colSpan={7} className="p-8 text-center text-ink-soft">
-                  Loading cutting orders...
-                </td>
-              </tr>
-            ) : orders.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="p-8 text-center text-ink-soft">
-                  No cutting orders yet. Create the first one.
-                </td>
-              </tr>
-            ) : (
-              orders.map((o) => {
-                const isRejected = o.status === "REJECTED";
-                const isActionLoading = actionLoadingId === o.id;
+      {/* Toolbar: Search & Searchable Recipe Combobox */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="flex flex-1 items-center gap-2.5 max-w-lg">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-soft pointer-events-none" />
+            <Input
+              id="order-search-input"
+              type="text"
+              placeholder="Search by Order #, Roll ID, or Recipe... (Press /)"
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="pl-8 text-xs h-9 bg-paper font-sans"
+            />
+          </div>
 
-                return (
-                  <React.Fragment key={o.id}>
-                    <tr
-                      className={`hover:bg-row-hover transition-colors ${
-                        isRejected ? "border-l-4 border-l-short-edge bg-short-bg/20" : ""
-                      }`}
-                    >
-                      <td className="p-3.5 pl-4 font-bold text-ink whitespace-nowrap">
-                        <Link
-                          href={`/supervisor/orders/${o.id}`}
-                          className="hover:underline text-ink"
-                        >
-                          {o.orderNo}
-                        </Link>
-                      </td>
-                      <td className="p-3.5 text-ink whitespace-nowrap">
-                        {o.recipe.name}{" "}
-                        <span className="text-xs text-ink-soft">({o.recipe.recipeCode})</span>
-                      </td>
-                      <td className="p-3.5 text-right font-display text-lg font-semibold tabular-nums text-ink">
-                        {o.targetQty}
-                      </td>
-                      <td className="p-3.5 font-bold text-ink whitespace-nowrap">
-                        {o.fabricRollId}
-                      </td>
-                      <td className="p-3.5 text-right tabular-nums text-ink">
-                        {o.actualFabricYds.toFixed(2)}
-                      </td>
-                      <td className="p-3.5 whitespace-nowrap">
-                        <Stamp status={o.status} />
-                      </td>
-                      <td className="p-3.5 pr-4 text-right whitespace-nowrap space-x-2">
-                        {o.status === "CUTTING_IN_PROGRESS" && (
-                          <>
-                            <Link href={`/supervisor/orders/${o.id}`}>
-                              <Button variant="secondary" size="sm">
-                                Edit
-                              </Button>
-                            </Link>
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              disabled={isActionLoading}
-                              onClick={() => handleSubmitOrder(o.id, o.orderNo)}
-                            >
-                              Send to verification
-                            </Button>
-                          </>
-                        )}
+          <div className="w-56 shrink-0">
+            <RecipeCombobox
+              recipes={recipes}
+              value={selectedRecipeId}
+              onChange={handleRecipeChange}
+              allowAll
+              allLabel="All recipes"
+              placeholder="Filter by recipe..."
+            />
+          </div>
+        </div>
 
-                        {o.status === "REJECTED" && (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            disabled={isActionLoading}
-                            onClick={() => handleRecutOrder(o.id, o.orderNo)}
-                          >
-                            Re-cut
-                          </Button>
-                        )}
-
-                        {(o.status === "PENDING_VERIFICATION" || o.status === "VERIFIED") && (
-                          <Link href={`/supervisor/orders/${o.id}`}>
-                            <Button variant="secondary" size="sm">
-                              View
-                            </Button>
-                          </Link>
-                        )}
-                      </td>
-                    </tr>
-
-                    {/* Second line in row for rejected reason note per DESIGN.md Section 9.5 */}
-                    {isRejected && o.lastRejectionReason && (
-                      <tr className="border-l-4 border-l-short-edge bg-short-bg/30">
-                        <td colSpan={7} className="px-4 py-2 text-sm text-short-fg font-medium">
-                          <strong>Rejection reason:</strong> {o.lastRejectionReason}
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleExportCSV}
+            className="text-xs h-9 flex items-center gap-1.5"
+            title="Export filtered records to CSV"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span>Export CSV</span>
+          </Button>
+        </div>
       </div>
 
-      {/* Create Order Modal */}
+      {/* High-Density Data Table */}
+      <div className="rounded-[4px] border border-rule bg-paper overflow-hidden shadow-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-sheet border-b border-rule select-none">
+              <tr>
+                <th className={`${headerPaddingClass} pl-3.5 w-8`}>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.size === orders.length && orders.length > 0}
+                    onChange={handleToggleSelectAll}
+                    aria-label="Select all rows on page"
+                    className="w-3.5 h-3.5 rounded-[2px] border-rule text-vat cursor-pointer"
+                  />
+                </th>
+                <th className={`${headerPaddingClass} font-bold text-ink-soft`}>Order</th>
+                <th className={`${headerPaddingClass} font-bold text-ink-soft`}>Recipe</th>
+                <th className={`${headerPaddingClass} text-right font-bold text-ink-soft`}>Target qty</th>
+                <th className={`${headerPaddingClass} font-bold text-ink-soft`}>Fabric roll</th>
+                <th className={`${headerPaddingClass} text-right font-bold text-ink-soft`}>Fabric (yds)</th>
+                <th className={`${headerPaddingClass} text-right font-bold text-ink-soft`}>Wastage</th>
+                <th className={`${headerPaddingClass} font-bold text-ink-soft`}>Status</th>
+                <th className={`${headerPaddingClass} pr-4 text-right font-bold text-ink-soft`}>Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-rule">
+              {isLoading ? (
+                <TableLoadingRow colSpan={9} label="Loading cutting orders..." />
+              ) : orders.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="p-8 text-center text-xs text-ink-soft">
+                    {searchQuery || selectedStatus !== "ALL" || selectedRecipeId !== "ALL"
+                      ? "No cutting orders matching the active filters."
+                      : "No cutting orders found. Click 'Create cutting order' to create the first batch."}
+                  </td>
+                </tr>
+              ) : (
+                orders.map((o) => {
+                  const isSelected = selectedIds.has(o.id);
+                  const isRejected = o.status === OrderStatus.REJECTED;
+
+                  return (
+                    <tr
+                      key={o.id}
+                      onClick={() =>
+                        setPeekData({
+                          id: o.id,
+                          orderNo: o.orderNo,
+                          status: o.status,
+                          targetQty: o.targetQty,
+                          fabricRollId: o.fabricRollId,
+                          actualFabricYds: o.actualFabricYds,
+                          expectedFabricYds: o.expectedFabricYds,
+                          wastagePct: o.wastagePct,
+                          recipeName: o.recipe.name,
+                          recipeCode: o.recipe.recipeCode,
+                          wastageCap: o.recipe.wastageCap,
+                          createdAt: o.createdAt,
+                          submittedAt: o.submittedAt,
+                          verifiedAt: o.verifiedAt,
+                          lastRejectionReason: o.lastRejectionReason,
+                          primaryActionHref: `/supervisor/orders/${o.id}`,
+                          primaryActionLabel:
+                            o.status === OrderStatus.CUTTING_IN_PROGRESS
+                              ? "Edit draft order"
+                              : "View full order",
+                        })
+                      }
+                      className={`hover:bg-row-hover transition-colors cursor-pointer select-none ${
+                        isSelected ? "bg-vat-tint/30" : ""
+                      } ${isRejected ? "border-l-4 border-l-short-edge bg-short-bg/20" : ""}`}
+                    >
+                      {/* Checkbox */}
+                      <td className={`${cellPaddingClass} pl-3.5`} onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => handleToggleSelectRow(o.id, e as any)}
+                          aria-label={`Select order ${o.orderNo}`}
+                          className="w-3.5 h-3.5 rounded-[2px] border-rule text-vat cursor-pointer"
+                        />
+                      </td>
+
+                      {/* Order Number */}
+                      <td className={`${cellPaddingClass} font-bold text-ink whitespace-nowrap`}>
+                        <Link
+                          href={`/supervisor/orders/${o.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="hover:underline text-ink"
+                        >
+                          <OrderNo orderNo={o.orderNo} />
+                        </Link>
+                      </td>
+
+                      {/* Recipe Name & Code */}
+                      <td className={`${cellPaddingClass} text-ink whitespace-nowrap`}>
+                        <span className="font-bold">{o.recipe.name}</span>{" "}
+                        <span className="text-[11px] text-ink-soft font-mono">({o.recipe.recipeCode})</span>
+                      </td>
+
+                      {/* Target Qty */}
+                      <td className={`${cellPaddingClass} text-right font-display font-bold tabular-nums text-ink`}>
+                        {o.targetQty}
+                      </td>
+
+                      {/* Fabric Roll ID */}
+                      <td className={`${cellPaddingClass} font-mono text-ink-soft whitespace-nowrap`}>
+                        {o.fabricRollId}
+                      </td>
+
+                      {/* Fabric Yards */}
+                      <td className={`${cellPaddingClass} text-right tabular-nums text-ink`}>
+                        {o.actualFabricYds.toFixed(2)} yds
+                      </td>
+
+                      {/* Wastage */}
+                      <td className={`${cellPaddingClass} text-right tabular-nums`}>
+                        <span
+                          className={`font-semibold ${
+                            o.wastagePct > o.recipe.wastageCap
+                              ? "text-excess-fg font-bold"
+                              : "text-ink"
+                          }`}
+                        >
+                          {o.wastagePct.toFixed(2)}%
+                        </span>
+                      </td>
+
+                      {/* Status Stamp */}
+                      <td className={`${cellPaddingClass} whitespace-nowrap`}>
+                        <Stamp status={o.status} />
+                      </td>
+
+                      {/* Row Actions */}
+                      <td
+                        className={`${cellPaddingClass} pr-4 text-right whitespace-nowrap`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center justify-end gap-1.5">
+                          {o.status === OrderStatus.CUTTING_IN_PROGRESS && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={(e) => handleSubmitSingle(e, o.id, o.orderNo)}
+                              disabled={submitOrderMutation.isPending}
+                              className="h-6.5 px-2 text-[11px] font-bold cursor-pointer"
+                            >
+                              Send to gate
+                            </Button>
+                          )}
+
+                          {o.status === OrderStatus.REJECTED && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={(e) => handleRecutSingle(e, o.id, o.orderNo)}
+                              disabled={recutOrderMutation.isPending}
+                              className="h-6.5 px-2 text-[11px] font-bold border-short-edge text-short-fg hover:bg-short-bg cursor-pointer"
+                            >
+                              Re-cut
+                            </Button>
+                          )}
+
+                          {o.status === OrderStatus.PENDING_VERIFICATION && (
+                            <span className="text-[11px] text-ink-soft italic">
+                              In verifier queue
+                            </span>
+                          )}
+
+                          {o.status === OrderStatus.VERIFIED && (
+                            <span className="text-[11px] text-match-fg font-bold">
+                              ✓ Released
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Bar - Default 10 rows */}
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          totalItems={meta.total}
+          totalPages={meta.totalPages}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          pageSizeOptions={[10, 20, 50]}
+          itemLabel="cutting orders"
+        />
+      </div>
+
+      {/* Floating Selection Bar for bulk actions */}
+      <SelectionBar
+        selectedCount={selectedIds.size}
+        onClearSelection={() => setSelectedIds(new Set())}
+        actions={[
+          {
+            label: "Send to verification",
+            onClick: handleBulkSubmit,
+            variant: "primary",
+            icon: <Send className="w-3.5 h-3.5" />,
+          },
+          {
+            label: "Export selected CSV",
+            onClick: handleExportCSV,
+            variant: "secondary",
+            icon: <FileSpreadsheet className="w-3.5 h-3.5" />,
+          },
+        ]}
+      />
+
+      {/* Modals & Slide-over Drawers */}
       <CreateOrderModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
         recipes={recipes}
-        onOrderCreated={fetchOrders}
+        onOrderCreated={() => {
+          // Invalidate queries or re-fetch
+        }}
+      />
+
+      <PeekDrawer
+        open={Boolean(peekData)}
+        onOpenChange={(open) => {
+          if (!open) setPeekData(null);
+        }}
+        data={peekData}
       />
     </div>
+  );
+}
+
+export default function SupervisorOrdersPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-ink-soft">Loading cutting orders ledger...</div>}>
+      <SupervisorOrdersContent />
+    </Suspense>
   );
 }

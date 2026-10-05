@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { SESSION_COOKIE_NAME, Actor } from "@/lib/auth/session";
 import { verifySessionToken } from "@/lib/auth/jwt";
 import { prisma } from "@/lib/db";
-import { AppHeader } from "@/components/layout/AppHeader";
+import { AppShell } from "@/components/layout/AppShell";
 
 export default async function AppLayout({
   children,
@@ -40,12 +40,5 @@ export default async function AppLayout({
 
   const actor: Actor = user;
 
-  return (
-    <div className="min-h-screen bg-chalk flex flex-col">
-      <AppHeader actor={actor} />
-      <main className="flex-1 max-w-[1200px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {children}
-      </main>
-    </div>
-  );
+  return <AppShell actor={actor}>{children}</AppShell>;
 }

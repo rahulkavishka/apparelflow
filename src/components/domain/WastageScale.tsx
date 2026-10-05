@@ -54,7 +54,7 @@ export function WastageScale({
       className="space-y-3 rounded-[2px] border border-rule bg-paper p-4"
     >
       <div className="flex items-baseline justify-between border-b border-rule pb-2">
-        <span className="text-xs font-bold text-ink uppercase tracking-wider">
+        <span className="text-sm font-bold text-ink">
           Fabric wastage
         </span>
         <div className="text-right">
@@ -93,7 +93,7 @@ export function WastageScale({
         </div>
 
         {/* Tick Marks Ruler */}
-        <div className="relative h-3 w-full flex justify-between text-[9px] text-ink-soft select-none font-mono">
+        <div className="relative flex justify-between text-sm text-ink-soft select-none tabular-nums">
           <span>0</span>
           <span>{Math.round(maxScale / 2)}</span>
           <span>{Math.round(maxScale)}%</span>

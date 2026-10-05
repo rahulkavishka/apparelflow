@@ -1,144 +1,253 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Stamp } from "@/components/domain/Stamp";
+import { OrderNo } from "@/components/domain/OrderNo";
+import { RelativeTime } from "@/components/domain/RelativeTime";
+import { KPICard } from "@/components/ui/KPICard";
+import { Pagination } from "@/components/ui/Pagination";
+import { DensityToggle, TableDensity } from "@/components/ui/DensityToggle";
+import { TableLoadingRow } from "@/components/ui/LoadingSpinner";
+import { useVerificationQueue } from "@/hooks/useVerification";
+import { Search, Clock, ArrowRight, CheckCircle2, ShieldAlert, RefreshCw } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { OrderStatus } from "@prisma/client";
-
-interface QueueItem {
-  id: string;
-  orderNo: string;
-  status: OrderStatus;
-  targetQty: number;
-  fabricRollId: string;
-  submittedAt: string | null;
-  recipe: {
-    recipeCode: string;
-    name: string;
-  };
-  createdBy: {
-    fullName: string;
-  };
-  totalItems: number;
-  countedItems: number;
-}
 
 export default function VerifierQueuePage() {
-  const [queue, setQueue] = useState<QueueItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [sortField, setSortField] = useState<"submittedAt" | "orderNo" | "targetQty">("submittedAt");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [density, setDensity] = useState<TableDensity>("compact");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const queryClient = useQueryClient();
 
-  const fetchQueue = useCallback(async () => {
-    setIsLoading(true);
+  const { data, isLoading, refetch } = useVerificationQueue({
+    q: searchQuery ? searchQuery.trim() : undefined,
+    sort: sortField,
+    dir: sortDir,
+    page,
+    pageSize,
+  });
+
+  const queue = data?.queue || [];
+  const meta = data?.meta || {
+    page: 1,
+    pageSize: 10,
+    total: 0,
+    totalPages: 1,
+  };
+
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
+    setPage(1);
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
     try {
-      const res = await fetch("/api/verification/queue");
-      const json = await res.json();
-      if (res.ok) {
-        setQueue(json.data.queue);
-      } else {
-        toast.error(json.error?.message || "Failed to load verification queue");
-      }
+      await queryClient.invalidateQueries({ queryKey: ["verificationQueue"] });
+      await refetch();
+      toast.success("Verification queue refreshed.");
     } catch {
-      toast.error("Network error loading verification queue");
+      toast.error("Failed to refresh queue.");
     } finally {
-      setIsLoading(false);
+      setTimeout(() => setIsRefreshing(false), 500);
     }
-  }, []);
+  };
 
-  useEffect(() => {
-    fetchQueue();
-  }, [fetchQueue]);
+  const totalGarments = queue.reduce((acc, item) => acc + item.targetQty, 0);
+
+  const cellPaddingClass = density === "compact" ? "py-2 px-3 text-xs" : "py-3.5 px-3.5 text-sm";
+  const headerPaddingClass = density === "compact" ? "py-2 px-3 text-xs" : "py-3 px-3.5 text-xs";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-semibold text-ink">
+          <h1 className="font-display text-2xl font-bold text-ink">
             Verification queue
           </h1>
-          <p className="text-sm text-ink-soft">
-            Incoming cut batches requiring piece-by-piece physical component verification before sewing queue release.
+          <p className="text-xs text-ink-soft">
+            Incoming cut bundles awaiting physical piece count verification before release to the sewing line.
           </p>
         </div>
 
         <Button
           variant="secondary"
           size="sm"
-          onClick={fetchQueue}
-          disabled={isLoading}
+          onClick={handleRefresh}
+          disabled={isLoading || isRefreshing}
+          className="h-8 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
         >
-          Refresh queue
+          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-vat" : ""}`} />
+          <span>Refresh queue</span>
         </Button>
       </div>
 
+      {/* KPI Stats Strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <KPICard
+          title="Batches in queue"
+          value={meta.total}
+          subtitle="Awaiting physical count"
+          icon={<Clock className="w-4 h-4" />}
+        />
+        <KPICard
+          title="Garments waiting"
+          value={totalGarments}
+          subtitle="Total batch units in queue"
+          icon={<CheckCircle2 className="w-4 h-4" />}
+        />
+        <KPICard
+          title="Quality Gatekeeper"
+          value="Locked Stop"
+          subtitle="Zero-defect gate enforcement active"
+          variant="vat"
+          icon={<ShieldAlert className="w-4 h-4" />}
+        />
+      </div>
+
+      {/* Search & Tooling Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-paper p-2.5 rounded-[2px] border border-rule">
+        <div className="relative flex-1 max-w-md">
+          <Search className="w-3.5 h-3.5 text-ink-soft absolute left-2.5 top-1/2 -translate-y-1/2" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Search queue by Order #, Roll ID, or Style..."
+            className="pl-8 h-8 text-xs bg-sheet/40"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          <DensityToggle density={density} onChange={setDensity} />
+        </div>
+      </div>
+
       {/* Queue Table */}
-      <div className="border border-rule rounded-[2px] bg-paper overflow-x-auto shadow-none">
-        <table className="w-full text-left text-sm border-collapse">
-          <thead className="bg-sheet border-b border-rule">
-            <tr>
-              <th className="p-3.5 pl-4 font-bold text-ink-soft">Order</th>
-              <th className="p-3.5 font-bold text-ink-soft">Recipe</th>
-              <th className="p-3.5 text-right font-bold text-ink-soft">Qty</th>
-              <th className="p-3.5 font-bold text-ink-soft">Fabric roll</th>
-              <th className="p-3.5 font-bold text-ink-soft">Submitted at</th>
-              <th className="p-3.5 font-bold text-ink-soft">Status</th>
-              <th className="p-3.5 pr-4 text-right font-bold text-ink-soft">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-rule">
-            {isLoading ? (
+      <div className="border border-rule rounded-[2px] bg-paper overflow-hidden shadow-none">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-sheet border-b border-rule">
               <tr>
-                <td colSpan={7} className="p-8 text-center text-ink-soft">
-                  Loading verification queue...
-                </td>
+                <th className={`${headerPaddingClass} pl-4 font-bold text-ink-soft`}>Order</th>
+                <th className={`${headerPaddingClass} font-bold text-ink-soft`}>Recipe</th>
+                <th className={`${headerPaddingClass} text-right font-bold text-ink-soft`}>Target qty</th>
+                <th className={`${headerPaddingClass} font-bold text-ink-soft`}>Fabric roll</th>
+                <th className={`${headerPaddingClass} font-bold text-ink-soft`}>Waiting since</th>
+                <th className={`${headerPaddingClass} text-center font-bold text-ink-soft`}>Counting status</th>
+                <th className={`${headerPaddingClass} font-bold text-ink-soft`}>Gate state</th>
+                <th className={`${headerPaddingClass} pr-4 text-right font-bold text-ink-soft`}>Terminal</th>
               </tr>
-            ) : queue.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="p-8 text-center text-ink-soft">
-                  No batches waiting for a count.
-                </td>
-              </tr>
-            ) : (
-              queue.map((item) => (
-                <tr key={item.id} className="hover:bg-row-hover transition-colors">
-                  <td className="p-3.5 pl-4 font-bold text-ink whitespace-nowrap">
-                    <Link
-                      href={`/verifier/orders/${item.id}`}
-                      className="hover:underline text-ink"
-                    >
-                      {item.orderNo}
-                    </Link>
-                  </td>
-                  <td className="p-3.5 text-ink whitespace-nowrap">
-                    {item.recipe.name}{" "}
-                    <span className="text-xs text-ink-soft">({item.recipe.recipeCode})</span>
-                  </td>
-                  <td className="p-3.5 text-right font-display text-lg font-semibold tabular-nums text-ink">
-                    {item.targetQty}
-                  </td>
-                  <td className="p-3.5 font-bold text-ink whitespace-nowrap">
-                    {item.fabricRollId}
-                  </td>
-                  <td className="p-3.5 text-ink whitespace-nowrap text-xs">
-                    {item.submittedAt ? new Date(item.submittedAt).toLocaleString() : "—"}
-                  </td>
-                  <td className="p-3.5 whitespace-nowrap">
-                    <Stamp status={item.status} />
-                  </td>
-                  <td className="p-3.5 pr-4 text-right whitespace-nowrap">
-                    <Link href={`/verifier/orders/${item.id}`}>
-                      <Button variant="primary" size="sm">
-                        Open terminal
-                      </Button>
-                    </Link>
+            </thead>
+            <tbody className="divide-y divide-rule">
+              {isLoading ? (
+                <TableLoadingRow colSpan={8} label="Loading verification queue..." />
+              ) : queue.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-xs text-ink-soft">
+                    {searchQuery
+                      ? "No queue items match your search filter."
+                      : "No batches waiting for verification. All cutting orders are clear."}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                queue.map((item) => {
+                  const isCountingStarted = item.countedItems > 0;
+                  const isFullyCounted = item.countedItems === item.totalItems && item.totalItems > 0;
+
+                  return (
+                    <tr
+                      key={item.id}
+                      className="hover:bg-row-hover transition-colors select-none"
+                    >
+                      <td className={`${cellPaddingClass} pl-4 font-bold text-ink whitespace-nowrap`}>
+                        <Link
+                          href={`/verifier/orders/${item.id}`}
+                          className="hover:underline text-ink"
+                        >
+                          <OrderNo orderNo={item.orderNo} />
+                        </Link>
+                      </td>
+
+                      <td className={`${cellPaddingClass} text-ink whitespace-nowrap`}>
+                        <span className="font-bold">{item.recipe.name}</span>{" "}
+                        <span className="text-[11px] text-ink-soft font-mono">({item.recipe.recipeCode})</span>
+                      </td>
+
+                      <td className={`${cellPaddingClass} text-right font-display font-bold tabular-nums text-ink`}>
+                        {item.targetQty}
+                      </td>
+
+                      <td className={`${cellPaddingClass} font-bold font-mono text-ink whitespace-nowrap`}>
+                        {item.fabricRollId}
+                      </td>
+
+                      <td className={`${cellPaddingClass} text-ink-soft whitespace-nowrap font-medium`}>
+                        <RelativeTime value={item.submittedAt} />
+                      </td>
+
+                      {/* Counting Status Progress */}
+                      <td className={`${cellPaddingClass} text-center whitespace-nowrap`}>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-[2px] font-mono font-bold text-[11px] ${
+                            isFullyCounted
+                              ? "bg-match-bg text-match-fg border border-match-edge/60"
+                              : isCountingStarted
+                              ? "bg-vat-tint/40 text-vat border border-vat/30"
+                              : "bg-sheet text-ink-soft border border-rule"
+                          }`}
+                        >
+                          {item.countedItems} / {item.totalItems} counted
+                        </span>
+                      </td>
+
+                      <td className={`${cellPaddingClass} whitespace-nowrap`}>
+                        <Stamp status={item.status} />
+                      </td>
+
+                      <td className={`${cellPaddingClass} pr-4 text-right whitespace-nowrap`}>
+                        <div className="flex items-center justify-end">
+                          <Link href={`/verifier/orders/${item.id}`} className="inline-flex">
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              className="h-7 text-xs px-2.5 font-bold inline-flex items-center gap-1 bg-vat text-paper hover:bg-vat/90 cursor-pointer"
+                            >
+                              <span>Open terminal</span>
+                              <ArrowRight className="w-3 h-3" />
+                            </Button>
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Integrated Pagination Bar - Default 10 */}
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          total={meta.total}
+          totalPages={meta.totalPages}
+          onPageChange={setPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setPage(1);
+          }}
+          pageSizeOptions={[10, 20, 50]}
+          itemLabel="batches"
+        />
       </div>
     </div>
   );

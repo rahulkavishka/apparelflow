@@ -17,7 +17,7 @@
   --rule: #C9D0D7;
   --control-edge: #68757F;
   --ink-soft: #44515C;
-  --ink-faint: #5C6975;
+  --ink-faint: #98A2AB;
   --disabled-bg: #DFE4E8;
 
   /* status */
@@ -92,6 +92,15 @@ select:-webkit-autofill:focus {
 
 :focus-visible { outline: 2px solid var(--vat); outline-offset: 2px; }
 .on-vat :focus-visible { outline-color: var(--paper); }
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--ink-faint);
+  opacity: 0.7;
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; }

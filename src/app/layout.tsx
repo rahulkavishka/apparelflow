@@ -22,6 +22,11 @@ export const metadata: Metadata = {
   title: "ApparelFlow ERP — Cutting Operations & Gatekeeper Verification Terminal",
   description:
     "Industrial garment production batch verification terminal and sewing queue gatekeeper with server-side RBAC and tamper protection.",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -35,10 +40,13 @@ export default function RootLayout({
       className={`${atkinson.variable} ${barlow.variable} light h-full`}
       style={{ colorScheme: "light" }}
     >
+      <head>
+        <link rel="icon" href="/logo.png" type="image/png" sizes="any" />
+      </head>
       <body className="min-h-full flex flex-col bg-chalk text-ink antialiased font-sans">
         <Providers>
           {children}
-          <Toaster position="bottom-left" richColors />
+          <Toaster position="bottom-right" richColors />
         </Providers>
       </body>
     </html>

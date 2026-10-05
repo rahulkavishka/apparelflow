@@ -2,6 +2,7 @@ import React from "react";
 import { Lamp } from "@/components/domain/Lamp";
 import { Stamp } from "@/components/domain/Stamp";
 import { OrderStatus } from "@prisma/client";
+import { formatDateTime } from "@/lib/format";
 
 export interface AuditSnapshotItem {
   componentId: string;
@@ -45,8 +46,8 @@ export function AuditStub({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Stamp status={isApproved ? OrderStatus.VERIFIED : OrderStatus.REJECTED} />
-          <span className="text-xs font-mono text-ink-soft uppercase">
-            AUDIT RECORD
+          <span className="text-sm font-bold text-ink-soft">
+            Audit record
           </span>
         </div>
 
@@ -56,7 +57,7 @@ export function AuditStub({
 
           <dt className="text-ink-soft font-medium">Verified at:</dt>
           <dd className="text-ink text-right">
-            {new Date(timestamp).toLocaleString()}
+            {formatDateTime(timestamp)}
           </dd>
 
           <dt className="text-ink-soft font-medium">Fabric wastage:</dt>
@@ -75,7 +76,7 @@ export function AuditStub({
 
       {/* Dashed Tear Line (Per Section 8.5) */}
       <div className="border-t-2 border-dashed border-ink-soft/30 pt-3">
-        <span className="block text-[10px] font-mono text-ink-soft uppercase tracking-wider mb-2">
+        <span className="block text-sm font-bold text-ink-soft mb-2">
           Component count breakdown
         </span>
 

@@ -17,20 +17,18 @@ export function middleware(request: NextRequest) {
 
   const sessionToken = request.cookies.get(SESSION_COOKIE_NAME)?.value;
 
-  // If user is on /login and already has a token, redirect to home/dashboard
+  // /login always passes through. The (auth) layout redirects valid sessions to their
+  // role home; a stale cookie falls through to the form (no redirect loop).
   if (pathname === "/login") {
-    if (sessionToken) {
-      return NextResponse.redirect(new URL("/supervisor/orders", request.url));
-    }
     return NextResponse.next();
   }
 
-  // If root path "/", redirect to login if unauthenticated or supervisor orders
+  // Root: unauthenticated -> /login; otherwise the page redirects by role.
   if (pathname === "/") {
     if (!sessionToken) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
-    return NextResponse.redirect(new URL("/supervisor/orders", request.url));
+    return NextResponse.next();
   }
 
   // Protected page routes: if no token, redirect to /login

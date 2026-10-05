@@ -39,3 +39,24 @@ export const rejectOrderSchema = z
 export type RejectOrderInput = z.infer<typeof rejectOrderSchema>;
 
 export const approveOrderSchema = z.object({}).strict();
+
+export const listQueueQuerySchema = z
+  .object({
+    q: z.string().trim().max(64, "Search query cannot exceed 64 characters").optional(),
+    sort: z.enum(["submittedAt", "orderNo", "targetQty"]).default("submittedAt"),
+    dir: z.enum(["asc", "desc"]).default("asc"),
+    page: z.coerce.number().int().positive().default(1),
+    pageSize: z.coerce.number().int().positive().max(100).default(50),
+  })
+  .strict();
+
+export const listLogsQuerySchema = z
+  .object({
+    q: z.string().trim().max(64, "Search query cannot exceed 64 characters").optional(),
+    decision: z.enum(["APPROVED", "REJECTED", "ALL"]).default("ALL"),
+    from: z.string().optional(),
+    to: z.string().optional(),
+    page: z.coerce.number().int().positive().default(1),
+    pageSize: z.coerce.number().int().positive().max(50).default(20),
+  })
+  .strict();

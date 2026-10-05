@@ -66,6 +66,15 @@ export interface SewingOrderDetailDto {
   }>;
 }
 
+export interface ListSewingQueueOpts {
+  q?: string;
+  startedFilter?: "all" | "awaiting" | "started";
+  sort?: "verifiedAt" | "orderNo" | "targetQty";
+  dir?: "asc" | "desc";
+  page?: number;
+  pageSize?: number;
+}
+
 /**
  * Lists VERIFIED orders for the sewing queue.
  *
@@ -73,55 +82,85 @@ export interface SewingOrderDetailDto {
  * The database query enforces WHERE status = 'VERIFIED' literally.
  * No query parameter or client input can override or widen this filter.
  */
-export async function listSewingQueue(query?: {
-  startedFilter?: "all" | "awaiting" | "started";
-}): Promise<SewingQueueItemDto[]> {
+export async function listSewingQueue(query?: ListSewingQueueOpts) {
   const filter = query?.startedFilter || "all";
+  const page = Math.max(1, query?.page || 1);
+  const pageSize = Math.min(query?.pageSize || 20, 50);
+  const skip = (page - 1) * pageSize;
 
-  const orders = await prisma.cuttingOrder.findMany({
-    where: {
-      status: OrderStatus.VERIFIED, // Hard-coded literal status (SR-03)
-      ...(filter === "awaiting" ? { sewingStartedAt: null } : {}),
-      ...(filter === "started" ? { sewingStartedAt: { not: null } } : {}),
-    },
-    select: {
-      id: true,
-      orderNo: true,
-      targetQty: true,
-      fabricRollId: true,
-      status: true,
-      verifiedAt: true,
-      sewingStartedAt: true,
-      recipe: {
-        select: {
-          recipeCode: true,
-          name: true,
-          wastageCap: true,
+  const baseWhere: Record<string, unknown> = {
+    status: OrderStatus.VERIFIED, // Hard-coded literal status (SR-03)
+  };
+
+  if (query?.q) {
+    baseWhere.OR = [
+      { orderNo: { contains: query.q, mode: "insensitive" } },
+      { fabricRollId: { contains: query.q, mode: "insensitive" } },
+      { recipe: { name: { contains: query.q, mode: "insensitive" } } },
+      { recipe: { recipeCode: { contains: query.q, mode: "insensitive" } } },
+    ];
+  }
+
+  const where = {
+    ...baseWhere,
+    ...(filter === "awaiting" ? { sewingStartedAt: null } : {}),
+    ...(filter === "started" ? { sewingStartedAt: { not: null } } : {}),
+  };
+
+  let orderBy: Record<string, "asc" | "desc"> = { verifiedAt: "desc" };
+  const direction = query?.dir || "desc";
+  if (query?.sort === "orderNo") orderBy = { orderNo: direction };
+  else if (query?.sort === "targetQty") orderBy = { targetQty: direction };
+  else if (query?.sort === "verifiedAt") orderBy = { verifiedAt: direction };
+
+  const [orders, total, awaitingCount, startedCount, allCount] = await Promise.all([
+    prisma.cuttingOrder.findMany({
+      where,
+      select: {
+        id: true,
+        orderNo: true,
+        targetQty: true,
+        fabricRollId: true,
+        status: true,
+        verifiedAt: true,
+        sewingStartedAt: true,
+        recipe: {
+          select: {
+            recipeCode: true,
+            name: true,
+            wastageCap: true,
+          },
         },
-      },
-      sewingBy: {
-        select: {
-          id: true,
-          fullName: true,
+        sewingBy: {
+          select: {
+            id: true,
+            fullName: true,
+          },
         },
-      },
-      logs: {
-        where: { decision: Decision.APPROVED },
-        orderBy: { timestamp: "desc" },
-        take: 1,
-        select: {
-          wastagePct: true,
-          timestamp: true,
-          verifier: {
-            select: { id: true, fullName: true },
+        logs: {
+          where: { decision: Decision.APPROVED },
+          orderBy: { timestamp: "desc" },
+          take: 1,
+          select: {
+            wastagePct: true,
+            timestamp: true,
+            verifier: {
+              select: { id: true, fullName: true },
+            },
           },
         },
       },
-    },
-    orderBy: { verifiedAt: "desc" },
-  });
+      orderBy,
+      skip,
+      take: pageSize,
+    }),
+    prisma.cuttingOrder.count({ where }),
+    prisma.cuttingOrder.count({ where: { ...baseWhere, sewingStartedAt: null } }),
+    prisma.cuttingOrder.count({ where: { ...baseWhere, sewingStartedAt: { not: null } } }),
+    prisma.cuttingOrder.count({ where: baseWhere }),
+  ]);
 
-  return orders.map((o) => {
+  const formattedOrders: SewingQueueItemDto[] = orders.map((o) => {
     const approvedLog = o.logs[0] || null;
     return {
       id: o.id,
@@ -145,6 +184,22 @@ export async function listSewingQueue(query?: {
       sewingStartedBy: o.sewingBy,
     };
   });
+
+  return {
+    orders: formattedOrders,
+    total,
+    meta: {
+      page,
+      pageSize,
+      total,
+      totalPages: Math.ceil(total / pageSize),
+      counts: {
+        awaiting: awaitingCount,
+        started: startedCount,
+        all: allCount,
+      },
+    },
+  };
 }
 
 /**

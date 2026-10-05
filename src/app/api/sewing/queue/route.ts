@@ -2,19 +2,16 @@ import { Role } from "@prisma/client";
 import { withAuth } from "@/lib/auth/guards";
 import { jsonOk } from "@/lib/http";
 import { listSewingQueue } from "@/services/sewing.service";
+import { listSewingQueueQuerySchema } from "@/validators/sewing.schema";
 
 export const dynamic = "force-dynamic";
 
 export const GET = withAuth([Role.sewing_supervisor], async ({ req }) => {
   const url = new URL(req.url);
-  const startedFilterParam = url.searchParams.get("startedFilter");
+  const searchParams = Object.fromEntries(url.searchParams.entries());
+  const query = listSewingQueueQuerySchema.parse(searchParams);
 
-  let startedFilter: "all" | "awaiting" | "started" = "all";
-  if (startedFilterParam === "awaiting" || startedFilterParam === "started") {
-    startedFilter = startedFilterParam;
-  }
-
-  // Notice: even if ?status=PENDING_VERIFICATION is passed, it is completely ignored
-  const orders = await listSewingQueue({ startedFilter });
-  return jsonOk({ orders, total: orders.length });
+  // Security Invariant (SR-03 / T5): Even if ?status=PENDING_VERIFICATION is passed, it is strictly rejected by schema or ignored
+  const result = await listSewingQueue(query);
+  return jsonOk(result);
 });

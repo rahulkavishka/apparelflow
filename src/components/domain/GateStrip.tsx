@@ -27,7 +27,7 @@ export function GateStrip({
   const isAllCounted = uncountedComponents === 0;
   const isOpen = canApprove; // All counted and 0 short
 
-  let bgClass = "bg-not-counted-bg text-not-counted-fg border-l-not-counted-bar";
+  let bgClass = "bg-none-bg text-none-fg";
   let barColor = "#7B8793";
   let stateTitle = "Gate closed.";
   let stateSentence = "";
@@ -35,7 +35,7 @@ export function GateStrip({
 
   if (countedComponents === 0) {
     // Waiting
-    bgClass = "bg-not-counted-bg text-not-counted-fg";
+    bgClass = "bg-none-bg text-none-fg";
     barColor = "#7B8793";
     stateSentence = "Count every component to open it.";
     rightSideText = `0 of ${totalComponents} counted`;
@@ -58,7 +58,7 @@ export function GateStrip({
     }
   } else if (!isAllCounted) {
     // Counting
-    bgClass = "bg-not-counted-bg text-not-counted-fg";
+    bgClass = "bg-none-bg text-none-fg";
     barColor = "#7B8793";
     stateSentence = `${uncountedComponents} ${
       uncountedComponents === 1 ? "component still needs" : "components still need"
@@ -135,7 +135,7 @@ export function GateStrip({
         </div>
       </div>
 
-      <div className="text-xs sm:text-sm font-bold tracking-tight uppercase tabular-nums self-end sm:self-center shrink-0">
+      <div className="text-sm sm:text-base font-bold tabular-nums self-end sm:self-center shrink-0">
         {rightSideText}
       </div>
     </div>

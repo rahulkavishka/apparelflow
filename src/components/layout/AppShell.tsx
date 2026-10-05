@@ -33,7 +33,7 @@ export function AppShell({ actor, children }: AppShellProps) {
       <Dialog open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <DialogContent
           hideCloseButton
-          className="p-0 w-72 max-w-[85vw] h-full h-screen fixed left-0 top-0 translate-x-0 translate-y-0 rounded-none border-r border-rule bg-paper z-50 overflow-hidden data-[state=open]:slide-in-from-left data-[state=closed]:slide-out-to-left data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 duration-200"
+          className="p-0 w-72 max-w-[85vw] h-full fixed left-0 top-0 translate-x-0 translate-y-0 rounded-none border-r border-rule bg-paper z-50 overflow-hidden data-[state=open]:slide-in-from-left data-[state=closed]:slide-out-to-left data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 duration-200"
         >
           <DialogTitle className="sr-only">Navigation Menu</DialogTitle>
           <DialogDescription className="sr-only">Main application sidebar</DialogDescription>

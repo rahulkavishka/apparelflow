@@ -8,7 +8,7 @@ function Skeleton({
   return (
     <div
       aria-hidden="true"
-      className={cn("rounded-[2px] bg-rule/60", className)}
+      className={cn("rounded-xs bg-rule/60", className)}
       {...props}
     />
   );

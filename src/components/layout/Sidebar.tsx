@@ -71,7 +71,7 @@ function SidebarContent({
             <button
               type="button"
               onClick={onToggleCollapse}
-              className="p-1.5 rounded-[4px] hover:bg-sheet text-ink hover:text-vat transition-colors cursor-pointer"
+              className="p-1.5 rounded-sm hover:bg-sheet text-ink hover:text-vat transition-colors cursor-pointer"
               title="Expand sidebar"
               aria-label="Expand sidebar"
             >
@@ -86,7 +86,7 @@ function SidebarContent({
               className="flex items-center gap-2.5 font-display text-lg font-bold text-ink hover:opacity-90 overflow-hidden"
               title="ApparelFlow ERP"
             >
-              <div className="w-7 h-7 rounded-[4px] flex items-center justify-center shrink-0 overflow-hidden">
+              <div className="w-7 h-7 rounded-sm flex items-center justify-center shrink-0 overflow-hidden">
                 <Image
                   src="/logo.png"
                   alt="ApparelFlow Logo"
@@ -142,7 +142,7 @@ function SidebarContent({
               </div>
               {!collapsed && supervisorCounts && (
                 <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-[2px] font-mono font-bold shrink-0 ${
+                  className={`text-[10px] px-1.5 py-0.2 rounded-xs font-mono font-bold shrink-0 ${
                     (pathname === "/supervisor/orders" && !currentStatus) ||
                     pathname.startsWith("/supervisor/orders/")
                       ? "bg-paper/20 text-paper"
@@ -237,7 +237,7 @@ function SidebarContent({
                   {!collapsed && <span>Rejected (Re-cut)</span>}
                 </div>
                 {!collapsed && supervisorCounts && supervisorCounts.REJECTED > 0 && (
-                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-[2px] bg-short-edge text-paper font-bold">
+                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-xs bg-short-edge text-paper font-bold">
                     {supervisorCounts.REJECTED}
                   </span>
                 )}
@@ -295,7 +295,7 @@ function SidebarContent({
               </div>
               {!collapsed && verifierCount > 0 && (
                 <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-[2px] font-mono font-bold shrink-0 ${
+                  className={`text-[10px] px-1.5 py-0.2 rounded-xs font-mono font-bold shrink-0 ${
                     pathname.startsWith("/verifier/queue") || pathname.startsWith("/verifier/orders/")
                       ? "bg-paper text-vat"
                       : "bg-vat text-paper"
@@ -369,7 +369,7 @@ function SidebarContent({
               </div>
               {!collapsed && sewingCounts && (
                 <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-[2px] font-mono font-bold shrink-0 ${
+                  className={`text-[10px] px-1.5 py-0.2 rounded-xs font-mono font-bold shrink-0 ${
                     (pathname === "/sewing/queue" && (!currentStartedFilter || currentStartedFilter === "all")) ||
                     pathname.startsWith("/sewing/orders/")
                       ? "bg-paper/20 text-paper"

@@ -129,7 +129,7 @@ export function RecipeCombobox({
 
       {/* Dropdown Popover with Crisp High-Contrast Elevation */}
       {isOpen && (
-        <div className="absolute left-0 right-0 sm:right-auto top-full mt-1.5 w-full sm:w-auto sm:min-w-[300px] max-w-[calc(100vw-32px)] bg-paper rounded-[6px] border border-ink/20 shadow-[0_16px_40px_rgba(15,23,42,0.24),_0_2px_8px_rgba(15,23,42,0.1)] ring-1 ring-black/10 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute left-0 right-0 sm:right-auto top-full mt-1.5 w-full sm:w-auto sm:min-w-75 max-w-[calc(100vw-32px)] bg-paper rounded-md border border-ink/20 shadow-[0_16px_40px_rgba(15,23,42,0.24),0_2px_8px_rgba(15,23,42,0.1)] ring-1 ring-black/10 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
           {/* Search Box inside dropdown with distinct header styling */}
           <div className="p-2.5 border-b border-rule bg-sheet flex items-center gap-2">
             <Search className="w-3.5 h-3.5 text-ink-soft shrink-0" />
@@ -177,7 +177,7 @@ export function RecipeCombobox({
                   key={r.id}
                   type="button"
                   onClick={() => handleSelect(r.id)}
-                  className={`w-full text-left px-2.5 py-2 rounded-[2px] text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                  className={`w-full text-left px-2.5 py-2 rounded-xs text-xs flex items-center justify-between transition-colors cursor-pointer ${
                     isSelected
                       ? "bg-vat text-paper font-bold"
                       : "text-ink hover:bg-sheet"

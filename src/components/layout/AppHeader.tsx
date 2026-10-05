@@ -146,7 +146,7 @@ export function AppHeader({ actor }: AppHeaderProps) {
       </header>
 
       {/* Role Navigation Tabs */}
-      <nav aria-label="Role Navigation" className="max-w-[1200px] mx-auto px-4 sm:px-6 flex gap-6">
+      <nav aria-label="Role Navigation" className="max-w-300 mx-auto px-4 sm:px-6 flex gap-6">
         {navLinks.map((link) => {
           const isActive = pathname.startsWith(link.href);
           return (

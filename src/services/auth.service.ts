@@ -6,15 +6,31 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { LoginInput } from "@/validators/auth.schema";
 
 export async function loginUser(input: LoginInput, clientIp = "127.0.0.1") {
-  // Rate limit: 6 attempts per IP + email per minute
-  const rateLimitKey = `login:${clientIp}:${input.email}`;
-  const rateLimit = checkRateLimit(rateLimitKey, 6, 60 * 1000);
-  if (!rateLimit.success) {
-    throw new RateLimitError("Too many login attempts. Please wait a minute and try again.");
+  const normalizedEmail = input.email.toLowerCase().trim();
+
+  // Tier 1: Per IP + Email rate limit (6 attempts per minute)
+  const ipEmailKey = `login:ip-email:${clientIp}:${normalizedEmail}`;
+  const ipEmailLimit = checkRateLimit(ipEmailKey, 6, 60 * 1000);
+  if (!ipEmailLimit.success) {
+    throw new RateLimitError("Too many login attempts from this IP. Please wait a minute and try again.");
+  }
+
+  // Tier 2: Account-level email-only rate limit (15 attempts per minute across all IPs to prevent X-Forwarded-For bypass)
+  const emailKey = `login:email:${normalizedEmail}`;
+  const emailLimit = checkRateLimit(emailKey, 15, 60 * 1000);
+  if (!emailLimit.success) {
+    throw new RateLimitError("Too many login attempts for this account. Please wait a minute and try again.");
+  }
+
+  // Tier 3: Global IP rate limit (30 attempts per minute per IP to prevent credential stuffing)
+  const globalIpKey = `login:ip:${clientIp}`;
+  const globalIpLimit = checkRateLimit(globalIpKey, 30, 60 * 1000);
+  if (!globalIpLimit.success) {
+    throw new RateLimitError("Too many login attempts from your network. Please wait a minute and try again.");
   }
 
   const user = await prisma.user.findUnique({
-    where: { email: input.email },
+    where: { email: normalizedEmail },
   });
 
   if (!user) {

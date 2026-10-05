@@ -13,7 +13,7 @@ export function Stamp({ status, isSewingStarted, className }: StampProps) {
     return (
       <span
         className={cn(
-          "inline-block rounded-[2px] bg-vat px-2.5 py-1 text-sm font-bold text-paper",
+          "inline-block rounded-xs bg-vat px-2.5 py-1 text-sm font-bold text-paper",
           className
         )}
       >
@@ -27,7 +27,7 @@ export function Stamp({ status, isSewingStarted, className }: StampProps) {
       return (
         <span
           className={cn(
-            "inline-block rounded-[2px] border-[1.5px] border-[#7B8793] bg-sheet px-2.5 py-1 text-sm font-bold text-ink-soft",
+            "inline-block rounded-xs border-[1.5px] border-[#7B8793] bg-sheet px-2.5 py-1 text-sm font-bold text-ink-soft",
             className
           )}
         >
@@ -38,7 +38,7 @@ export function Stamp({ status, isSewingStarted, className }: StampProps) {
       return (
         <span
           className={cn(
-            "inline-block rounded-[2px] border-[1.5px] border-vat bg-vat-tint px-2.5 py-1 text-sm font-bold text-vat",
+            "inline-block rounded-xs border-[1.5px] border-vat bg-vat-tint px-2.5 py-1 text-sm font-bold text-vat",
             className
           )}
         >
@@ -49,7 +49,7 @@ export function Stamp({ status, isSewingStarted, className }: StampProps) {
       return (
         <span
           className={cn(
-            "inline-block rounded-[2px] border-[1.5px] border-short-edge bg-short-bg px-2.5 py-1 text-sm font-bold text-short-fg",
+            "inline-block rounded-xs border-[1.5px] border-short-edge bg-short-bg px-2.5 py-1 text-sm font-bold text-short-fg",
             className
           )}
         >
@@ -60,7 +60,7 @@ export function Stamp({ status, isSewingStarted, className }: StampProps) {
       return (
         <span
           className={cn(
-            "inline-block rounded-[2px] border-[1.5px] border-match-edge bg-match-bg px-2.5 py-1 text-sm font-bold text-match-fg",
+            "inline-block rounded-xs border-[1.5px] border-match-edge bg-match-bg px-2.5 py-1 text-sm font-bold text-match-fg",
             className
           )}
         >

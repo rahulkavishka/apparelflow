@@ -43,7 +43,7 @@ export function RecipeDrawer({ open, onOpenChange, recipe }: RecipeDrawerProps) 
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <DialogPrimitive.Content
-          className="fixed inset-y-0 right-0 z-50 h-full w-full max-w-[500px] bg-paper shadow-2xl border-l border-rule flex flex-col focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right duration-200"
+          className="fixed inset-y-0 right-0 z-50 h-full w-full max-w-125 bg-paper shadow-2xl border-l border-rule flex flex-col focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right duration-200"
         >
           {/* Accessibility Titles */}
           <DialogPrimitive.Title className="sr-only">
@@ -57,10 +57,10 @@ export function RecipeDrawer({ open, onOpenChange, recipe }: RecipeDrawerProps) 
           <div className="p-4 border-b border-rule bg-sheet/50 flex items-start justify-between shrink-0">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-[2px] bg-vat text-paper">
+                <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-xs bg-vat text-paper">
                   {recipe.recipeCode}
                 </span>
-                <span className="text-xs px-2 py-0.5 rounded-[2px] bg-sheet border border-rule text-ink-soft font-semibold">
+                <span className="text-xs px-2 py-0.5 rounded-xs bg-sheet border border-rule text-ink-soft font-semibold">
                   {recipe.category}
                 </span>
               </div>
@@ -73,7 +73,7 @@ export function RecipeDrawer({ open, onOpenChange, recipe }: RecipeDrawerProps) 
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 text-ink-soft hover:text-ink hover:bg-sheet rounded-[2px] cursor-pointer"
+                className="h-8 w-8 p-0 text-ink-soft hover:text-ink hover:bg-sheet rounded-xs cursor-pointer"
                 aria-label="Close drawer"
               >
                 <X className="w-4 h-4" />
@@ -145,7 +145,7 @@ export function RecipeDrawer({ open, onOpenChange, recipe }: RecipeDrawerProps) 
                         </td>
                         <td className="p-2.5 pr-3 text-right">
                           {c.imageUrl ? (
-                            <div className="inline-flex items-center justify-center p-0.5 border border-rule rounded-[2px] bg-sheet">
+                            <div className="inline-flex items-center justify-center p-0.5 border border-rule rounded-xs bg-sheet">
                               <Image
                                 src={c.imageUrl}
                                 alt={c.componentName}
@@ -176,12 +176,12 @@ export function RecipeDrawer({ open, onOpenChange, recipe }: RecipeDrawerProps) 
                   <IntegerInput
                     value={calcQty}
                     onChange={(val) => setCalcQty(val ?? 1)}
-                    className="w-20 h-7 text-xs font-bold text-right py-0 px-2 rounded-[2px]"
+                    className="w-20 h-7 text-xs font-bold text-right py-0 px-2 rounded-xs"
                   />
                 </div>
               </div>
 
-              <div className="border border-rule rounded-[2px] bg-sheet/40 p-2.5 space-y-2">
+              <div className="border border-rule rounded-xs bg-sheet/40 p-2.5 space-y-2">
                 <div className="flex justify-between items-baseline text-xs">
                   <span className="text-ink-soft">Expected total fabric:</span>
                   <span className="font-bold font-mono text-ink">
@@ -196,7 +196,7 @@ export function RecipeDrawer({ open, onOpenChange, recipe }: RecipeDrawerProps) 
                 </div>
               </div>
 
-              <div className="border border-rule rounded-[2px] bg-paper overflow-hidden">
+              <div className="border border-rule rounded-xs bg-paper overflow-hidden">
                 <table className="w-full text-xs">
                   <thead className="bg-sheet border-b border-rule text-[11px] text-ink-soft font-bold">
                     <tr>

@@ -34,10 +34,10 @@ export function SelectionBar({
 
   return (
     <div
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-ink text-paper rounded-[4px] px-3 sm:px-4 py-2 sm:py-2.5 shadow-2xl flex items-center justify-between sm:justify-start gap-2.5 sm:gap-4 border border-paper/10 text-xs font-bold animate-in fade-in slide-in-from-bottom-3 duration-150 select-none max-w-[95vw] overflow-x-auto ${className}`}
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-ink text-paper rounded-sm px-3 sm:px-4 py-2 sm:py-2.5 shadow-2xl flex items-center justify-between sm:justify-start gap-2.5 sm:gap-4 border border-paper/10 text-xs font-bold animate-in fade-in slide-in-from-bottom-3 duration-150 select-none max-w-[95vw] overflow-x-auto ${className}`}
     >
       <div className="flex items-center gap-2">
-        <span className="bg-vat px-2 py-0.5 rounded-[2px] font-mono font-bold text-paper">
+        <span className="bg-vat px-2 py-0.5 rounded-xs font-mono font-bold text-paper">
           {selectedCount}
         </span>
         <span>selected</span>
@@ -53,7 +53,7 @@ export function SelectionBar({
         )}
       </div>
 
-      <div className="h-4 w-[1px] bg-paper/20"></div>
+      <div className="h-4 w-px bg-paper/20"></div>
 
       {/* Bulk Action Buttons */}
       <div className="flex items-center gap-2">
@@ -76,7 +76,7 @@ export function SelectionBar({
           variant="ghost"
           size="sm"
           onClick={onClearSelection}
-          className="h-7 px-2 text-paper/70 hover:text-paper hover:bg-paper/10 text-xs rounded-[2px] flex items-center gap-1"
+          className="h-7 px-2 text-paper/70 hover:text-paper hover:bg-paper/10 text-xs rounded-xs flex items-center gap-1"
         >
           <X className="w-3.5 h-3.5" />
           <span>Clear</span>

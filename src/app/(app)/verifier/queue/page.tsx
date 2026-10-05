@@ -108,7 +108,7 @@ export default function VerifierQueuePage() {
       </div>
 
       {/* Search & Tooling Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-paper p-2.5 rounded-[2px] border border-rule">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-paper p-2.5 rounded-xs border border-rule">
         <div className="relative flex-1 max-w-md">
           <Search className="w-3.5 h-3.5 text-ink-soft absolute left-2.5 top-1/2 -translate-y-1/2" />
           <Input
@@ -125,7 +125,7 @@ export default function VerifierQueuePage() {
       </div>
 
       {/* Queue Table (Desktop) & Responsive Cards (Mobile) */}
-      <div className="border border-rule rounded-[2px] bg-paper overflow-hidden shadow-none">
+      <div className="border border-rule rounded-xs bg-paper overflow-hidden shadow-none">
         {/* Desktop Table View */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -191,7 +191,7 @@ export default function VerifierQueuePage() {
                       {/* Counting Status Progress */}
                       <td className={`${cellPaddingClass} text-center whitespace-nowrap`}>
                         <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-[2px] font-mono font-bold text-[11px] ${
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-xs font-mono font-bold text-[11px] ${
                             isFullyCounted
                               ? "bg-match-bg text-match-fg border border-match-edge/60"
                               : isCountingStarted
@@ -291,7 +291,7 @@ export default function VerifierQueuePage() {
                   <div className="flex items-center justify-between text-xs pt-1">
                     <span className="text-ink-soft font-medium">Piece Audit:</span>
                     <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-[2px] font-mono font-bold text-[11px] ${
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-xs font-mono font-bold text-[11px] ${
                         isFullyCounted
                           ? "bg-match-bg text-match-fg border border-match-edge/60"
                           : isCountingStarted

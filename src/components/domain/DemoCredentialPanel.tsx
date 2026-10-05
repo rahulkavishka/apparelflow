@@ -59,7 +59,7 @@ export function DemoCredentialPanel({
           return (
             <div
               key={acc.email}
-              className="rounded-[4px] border border-rule bg-paper p-3.5 flex flex-col justify-between space-y-3 hover:border-vat/40 transition-colors shadow-xs"
+              className="rounded-sm border border-rule bg-paper p-3.5 flex flex-col justify-between space-y-3 hover:border-vat/40 transition-colors shadow-xs"
             >
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
@@ -69,7 +69,7 @@ export function DemoCredentialPanel({
                     </div>
                     <h3 className="text-xs font-bold text-ink">{acc.roleTitle}</h3>
                   </div>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-[2px] bg-sheet border border-rule text-ink-soft font-semibold">
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-xs bg-sheet border border-rule text-ink-soft font-semibold">
                     {acc.tag}
                   </span>
                 </div>
@@ -78,7 +78,7 @@ export function DemoCredentialPanel({
                   {acc.description}
                 </p>
 
-                <div className="bg-sheet/60 p-1.5 rounded-[2px] border border-rule/80 text-[11px] font-mono space-y-0.5 text-ink-soft">
+                <div className="bg-sheet/60 p-1.5 rounded-xs border border-rule/80 text-[11px] font-mono space-y-0.5 text-ink-soft">
                   <div className="truncate text-ink font-medium">{acc.email}</div>
                   <div className="text-[10px] text-ink-soft">Pass: {acc.password}</div>
                 </div>

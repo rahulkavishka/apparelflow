@@ -178,7 +178,7 @@ Evaluators can verify the core security and functional requirements in 5 minutes
 | Threat Scenario | Implemented Security Control |
 |---|---|
 | **Role Spoofing & Session Forgery** | `jose` JWT with pinned `HS256`, 256-bit secret, 8h expiry, HttpOnly/Secure/SameSite=Lax cookie. User role is re-queried from the database on every request (token claims are not trusted, D-10). |
-| **Credential Stuffing** | bcrypt cost 12 with constant-time dummy hash compare for unknown emails. In-memory IP + email rate limiting. |
+| **Credential Stuffing & IP Spoofing** | bcrypt cost 12 with constant-time dummy hash compare for unknown emails. 3-tier rate limiting (IP+Email, Account Email, and Global IP) to defeat brute-force and `X-Forwarded-For` spoofing. |
 | **State Tampering** | Zod `.strict()` schemas reject unexpected keys (e.g. injected `status`). Approve endpoint takes no body. |
 | **Sewing Queue Information Disclosure** | Sewing service hardcodes `where: { status: 'VERIFIED' }` as a literal query. Query parameter overrides are ignored. Looking up unverified orders returns `404 Not Found`. |
 | **Race Conditions on Approval** | Interactive Prisma transactions with atomic conditional update (`updateMany` where `status = PENDING_VERIFICATION`). Parallel approvals yield exactly one 200 and one 409. |
@@ -194,7 +194,7 @@ Evaluators can verify the core security and functional requirements in 5 minutes
 | **P1** | Architecture, Database & Auth | Prisma schema, hardening migration (checks, triggers, RLS), seed, JWT auth, `withAuth` RBAC, light-only tokens | Completed |
 | **P2** | Supervisor & Order Engine | Multiplier engine, wastage calculator, order service, Create Order modal with live preview, rejected re-cut flow | Completed |
 | **P3** | Verifier Terminal & Hard Stop | Traffic light engine, Gate strip, server hard stop (422), Reject dialog with 5–500 char note, audit stubs | Completed |
-| **P4** | Sewing Queue, Tests & AI Report | Isolated sewing queue, assembly start, 54/54 automated test suite (T1–T5), `AI_OPTIMIZATION_REPORT.md` | Completed |
+| **P4** | Sewing Queue, Tests & AI Report | Isolated sewing queue, assembly start, 71/71 automated test suite (T1–T5), `AI_OPTIMIZATION_REPORT.md` | Completed |
 | **P5** | Hardening, Docs & Release | Full documentation (`docs/API.md`, `openapi.yaml`, `SECURITY.md`, `ARCHITECTURE.md`), regression scripts, v1.0.0 release | Completed |
 
 ---
@@ -217,7 +217,7 @@ npm install
 
 # 3. Configure environment
 cp .env.example .env
-# Ensure DATABASE_URL, DIRECT_URL, and JWT_SECRET (min 32 chars) are set in .env
+# Ensure DATABASE_URL, DIRECT_URL, and JWT_SECRET (256-bit / 64 hex chars) are set in .env
 ```
 
 ### Database Deployment & Idempotent Seed
@@ -248,7 +248,7 @@ npm start
 The repository includes a comprehensive unit and integration test suite executing against a real PostgreSQL instance:
 
 ```bash
-# Run full automated test suite (65 tests across 7 suites)
+# Run full automated test suite (71 tests across 7 suites)
 npm test
 ```
 
@@ -281,7 +281,7 @@ npm run test:security
 - **D-07 (Role Isolation):** Each user has exactly one assigned role. No user can verify their own cutting order.
 - **D-08 (Zero-Tolerance Contrast):** Light-only theme with pure paper surfaces (`#FFFFFF`) and dark ink (`#19242F`). Dark mode is completely eradicated.
 - **D-09 (Defensive Inputs):** Custom `IntegerInput` and `DecimalInput` components intercept non-digit keystrokes and cleanse clipboard pastes.
-- **D-10 (Zero-DB Cryptographic Auth & Dataset Aggregations):** Signed JWT tokens seal verified user claims in-memory for 0ms auth latency; filter tabs and KPI summaries utilize dataset-wide database aggregations (`groupBy` & `aggregate`) rather than paginated page slices.
+- **D-10 (Zero-Trust Identity & Dataset Aggregations):** Signed JWT tokens seal verified user identity with DB-backed role verification on every request (10s in-memory actor cache for sub-millisecond route latency); filter tabs and KPI summaries utilize dataset-wide database aggregations (`groupBy` & `aggregate`) rather than paginated page slices.
 - **D-11 (Immutable SQL Filter):** The Sewing Queue SQL query hardcodes `where: { status: 'VERIFIED' }` at the database level.
 - **D-12 (PostgREST Sealing):** All database tables have Row-Level Security (RLS) enabled with deny-all policies.
 - **D-13 (Sequence Order Numbers):** Human-readable auto-incrementing order numbers follow `CUT-000001` format.

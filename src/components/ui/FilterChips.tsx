@@ -37,7 +37,7 @@ export function FilterChips<T extends string = string>({
             key={opt.value}
             type="button"
             onClick={() => handleSelect(opt.value)}
-            className={`h-7 px-2.5 rounded-[2px] text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shrink-0 border ${
+            className={`h-7 px-2.5 rounded-xs text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shrink-0 border ${
               isSelected
                 ? "bg-vat text-paper border-vat"
                 : "bg-paper text-ink hover:bg-sheet border-rule"
@@ -46,7 +46,7 @@ export function FilterChips<T extends string = string>({
             <span>{opt.label}</span>
             {opt.count !== undefined && (
               <span
-                className={`font-mono text-[10px] px-1.5 py-0.2 rounded-[2px] font-bold ${
+                className={`font-mono text-[10px] px-1.5 py-0.2 rounded-xs font-bold ${
                   isSelected
                     ? "bg-paper/20 text-paper"
                     : opt.badgeVariant === "short"

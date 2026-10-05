@@ -23,7 +23,7 @@ export function DensityToggle({
 
   return (
     <div
-      className={`inline-flex items-center rounded-[2px] border border-rule bg-paper p-0.5 select-none ${className}`}
+      className={`inline-flex items-center rounded-xs border border-rule bg-paper p-0.5 select-none ${className}`}
       role="group"
       aria-label="Table row density"
     >
@@ -31,7 +31,7 @@ export function DensityToggle({
         variant="ghost"
         size="sm"
         onClick={() => handleChange("compact")}
-        className={`h-6 px-2 text-[11px] font-bold rounded-[2px] flex items-center gap-1 ${
+        className={`h-6 px-2 text-[11px] font-bold rounded-xs flex items-center gap-1 ${
           density === "compact"
             ? "bg-sheet text-ink font-bold shadow-none"
             : "text-ink-soft hover:text-ink"
@@ -47,7 +47,7 @@ export function DensityToggle({
         variant="ghost"
         size="sm"
         onClick={() => handleChange("comfortable")}
-        className={`h-6 px-2 text-[11px] font-bold rounded-[2px] flex items-center gap-1 ${
+        className={`h-6 px-2 text-[11px] font-bold rounded-xs flex items-center gap-1 ${
           density === "comfortable"
             ? "bg-sheet text-ink font-bold shadow-none"
             : "text-ink-soft hover:text-ink"

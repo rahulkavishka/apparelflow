@@ -40,7 +40,7 @@ const SHORTCUT_SECTIONS = [
 export function ShortcutHelpModal({ open, onOpenChange }: ShortcutHelpModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[500px] p-5 shadow-xl rounded-[4px] border border-rule">
+      <DialogContent className="max-w-125 p-5 shadow-xl rounded-sm border border-rule">
         <DialogHeader className="border-b border-rule pb-2.5">
           <DialogTitle className="text-lg font-bold text-ink">
             Keyboard Shortcuts
@@ -53,11 +53,11 @@ export function ShortcutHelpModal({ open, onOpenChange }: ShortcutHelpModalProps
               <h4 className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">
                 {section.title}
               </h4>
-              <div className="divide-y divide-rule border border-rule rounded-[2px] bg-paper">
+              <div className="divide-y divide-rule border border-rule rounded-xs bg-paper">
                 {section.shortcuts.map((s) => (
                   <div key={s.key} className="px-3 py-2 flex items-center justify-between text-xs">
                     <span className="text-ink font-medium">{s.desc}</span>
-                    <kbd className="font-mono text-[11px] font-bold text-ink bg-sheet border border-rule px-1.5 py-0.5 rounded-[2px]">
+                    <kbd className="font-mono text-[11px] font-bold text-ink bg-sheet border border-rule px-1.5 py-0.5 rounded-xs">
                       {s.key}
                     </kbd>
                   </div>

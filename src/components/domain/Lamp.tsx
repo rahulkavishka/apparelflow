@@ -23,7 +23,7 @@ export function Lamp({ status, variance, className }: LampProps) {
             strokeLinejoin="round"
           />
         </svg>
-        <span className="rounded-[2px] bg-match-bg px-2 py-0.5 text-sm font-bold text-match-fg">
+        <span className="rounded-xs bg-match-bg px-2 py-0.5 text-sm font-bold text-match-fg">
           Match
         </span>
       </div>
@@ -44,7 +44,7 @@ export function Lamp({ status, variance, className }: LampProps) {
             strokeLinecap="round"
           />
         </svg>
-        <span className="rounded-[2px] bg-excess-bg px-2 py-0.5 text-sm font-bold text-excess-fg">
+        <span className="rounded-xs bg-excess-bg px-2 py-0.5 text-sm font-bold text-excess-fg">
           Excess{varText}
         </span>
       </div>
@@ -65,7 +65,7 @@ export function Lamp({ status, variance, className }: LampProps) {
             strokeLinecap="round"
           />
         </svg>
-        <span className="rounded-[2px] bg-short-bg px-2 py-0.5 text-sm font-bold text-short-fg">
+        <span className="rounded-xs bg-short-bg px-2 py-0.5 text-sm font-bold text-short-fg">
           Short{varText}
         </span>
       </div>
@@ -86,7 +86,7 @@ export function Lamp({ status, variance, className }: LampProps) {
           strokeDasharray="3 3"
         />
       </svg>
-      <span className="rounded-[2px] bg-none-bg px-2 py-0.5 text-sm font-bold text-none-fg">
+      <span className="rounded-xs bg-none-bg px-2 py-0.5 text-sm font-bold text-none-fg">
         Not counted
       </span>
     </div>

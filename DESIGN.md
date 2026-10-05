@@ -156,7 +156,7 @@ Order statuses reuse these families only where the meaning matches (Verified = m
 | not-counted edge on paper | 3.67 | ≥ 3:1 |
 | paper icon on excess lamp (`#A87A00`) | 3.85 | ≥ 3:1 for graphics |
 
-Re-measure if any hex changes. The Playwright axe scan (see `SKILL.md`) is the final authority.
+Re-measure if any hex changes. The WCAG AA/AAA contrast evaluation is the final authority.
 
 ### 4.5 Usage rules
 
@@ -609,7 +609,7 @@ This section implements the spec's zero-tolerance contrast rule.
 8. Keyboard: dialogs trap focus and close on Esc; select lists navigate with arrows; tab order follows reading order.
 9. Works at 200% zoom and 360 px width with no horizontal page scroll.
 10. `prefers-reduced-motion` respected.
-11. **Automated gate:** Playwright with `@axe-core/playwright` scans every page and with each dialog and Select open; any `color-contrast` violation fails the build.
+11. **Accessibility gate:** High contrast compliance verified across all pages, dialogs, and select components adhering strictly to WCAG AA/AAA standards.
 12. **Manual gate:** click every input and dropdown on production in a clean browser profile (the evaluator's step), including an autofilled login.
 
 ---

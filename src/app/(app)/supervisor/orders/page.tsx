@@ -423,7 +423,7 @@ function SupervisorOrdersContent() {
       </div>
 
       {/* High-Density Data Table (Desktop) & Responsive Cards (Mobile) */}
-      <div className="rounded-[4px] border border-rule bg-paper overflow-hidden shadow-xs">
+      <div className="rounded-sm border border-rule bg-paper overflow-hidden shadow-xs">
         {/* Desktop Table View */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -435,7 +435,7 @@ function SupervisorOrdersContent() {
                     checked={selectedIds.size === orders.length && orders.length > 0}
                     onChange={handleToggleSelectAll}
                     aria-label="Select all rows on page"
-                    className="w-3.5 h-3.5 rounded-[2px] border-rule text-vat cursor-pointer"
+                    className="w-3.5 h-3.5 rounded-xs border-rule text-vat cursor-pointer"
                   />
                 </th>
                 <th className={`${headerPaddingClass} font-bold text-ink-soft`}>Order</th>
@@ -502,7 +502,7 @@ function SupervisorOrdersContent() {
                           checked={isSelected}
                           onChange={(e) => handleToggleSelectRow(o.id, e as any)}
                           aria-label={`Select order ${o.orderNo}`}
-                          className="w-3.5 h-3.5 rounded-[2px] border-rule text-vat cursor-pointer"
+                          className="w-3.5 h-3.5 rounded-xs border-rule text-vat cursor-pointer"
                         />
                       </td>
 
@@ -664,7 +664,7 @@ function SupervisorOrdersContent() {
                           checked={isSelected}
                           onChange={(e) => handleToggleSelectRow(o.id, e as any)}
                           aria-label={`Select order ${o.orderNo}`}
-                          className="w-4 h-4 rounded-[2px] border-rule text-vat cursor-pointer"
+                          className="w-4 h-4 rounded-xs border-rule text-vat cursor-pointer"
                         />
                       </div>
                       <Link

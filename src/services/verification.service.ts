@@ -84,7 +84,7 @@ export interface ListQueueOpts {
  */
 export async function listVerificationQueue(opts: ListQueueOpts = {}) {
   const page = Math.max(1, opts.page || 1);
-  const pageSize = opts.pageSize ? Math.min(opts.pageSize, 100) : 50;
+  const pageSize = opts.pageSize ? Math.min(opts.pageSize, 50) : 50;
   const skip = (page - 1) * pageSize;
 
   const where: Record<string, unknown> = {

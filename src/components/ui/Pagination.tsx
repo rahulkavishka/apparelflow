@@ -107,7 +107,7 @@ export function Pagination({
           size="sm"
           disabled={page <= 1}
           onClick={() => onPageChange(1)}
-          className="h-7 w-7 p-0 text-ink hover:bg-sheet rounded-[2px]"
+          className="h-7 w-7 p-0 text-ink hover:bg-sheet rounded-xs"
           aria-label="First page"
         >
           <ChevronsLeft className="w-3.5 h-3.5" />
@@ -119,7 +119,7 @@ export function Pagination({
           size="sm"
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
-          className="h-7 px-2 text-xs font-bold border-rule bg-paper hover:bg-sheet rounded-[2px] flex items-center gap-1"
+          className="h-7 px-2 text-xs font-bold border-rule bg-paper hover:bg-sheet rounded-xs flex items-center gap-1"
           aria-label="Previous page"
         >
           <ChevronLeft className="w-3.5 h-3.5" />
@@ -132,7 +132,7 @@ export function Pagination({
           size="sm"
           disabled={page >= totalPages}
           onClick={() => onPageChange(page + 1)}
-          className="h-7 px-2 text-xs font-bold border-rule bg-paper hover:bg-sheet rounded-[2px] flex items-center gap-1"
+          className="h-7 px-2 text-xs font-bold border-rule bg-paper hover:bg-sheet rounded-xs flex items-center gap-1"
           aria-label="Next page"
         >
           <span className="hidden md:inline">Next</span>
@@ -145,7 +145,7 @@ export function Pagination({
           size="sm"
           disabled={page >= totalPages}
           onClick={() => onPageChange(totalPages)}
-          className="h-7 w-7 p-0 text-ink hover:bg-sheet rounded-[2px]"
+          className="h-7 w-7 p-0 text-ink hover:bg-sheet rounded-xs"
           aria-label="Last page"
         >
           <ChevronsRight className="w-3.5 h-3.5" />

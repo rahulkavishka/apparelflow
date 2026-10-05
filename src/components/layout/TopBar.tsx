@@ -86,7 +86,7 @@ export function TopBar({
           >
             <Search className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Search...</span>
-            <kbd className="hidden sm:inline-block text-[10px] font-mono text-ink-soft bg-paper border border-rule px-1.5 py-0.2 rounded-[2px]">
+            <kbd className="hidden sm:inline-block text-[10px] font-mono text-ink-soft bg-paper border border-rule px-1.5 py-0.2 rounded-xs">
               Ctrl K
             </kbd>
           </button>
@@ -103,7 +103,7 @@ export function TopBar({
             >
               <HelpCircle className="w-3.5 h-3.5" />
               <span className="hidden md:inline">Shortcuts</span>
-              <kbd className="hidden md:inline-block text-[10px] font-mono text-ink-soft bg-sheet border border-rule px-1 py-0.2 rounded-[2px]">
+              <kbd className="hidden md:inline-block text-[10px] font-mono text-ink-soft bg-sheet border border-rule px-1 py-0.2 rounded-xs">
                 ?
               </kbd>
             </Button>

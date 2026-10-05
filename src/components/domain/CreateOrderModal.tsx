@@ -153,7 +153,7 @@ export function CreateOrderModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[880px] w-[95vw] sm:w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-220 w-[95vw] sm:w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader className="border-b border-rule pb-2.5 sm:pb-3">
           <DialogTitle className="text-lg sm:text-xl font-bold text-ink">
             Create cutting order
@@ -243,7 +243,7 @@ export function CreateOrderModal({
           </div>
 
           {/* Right Column: Live Expected Pieces Multiplier & Fabric Preview */}
-          <div className="rounded-[4px] border border-rule bg-sheet p-4 space-y-4">
+          <div className="rounded-sm border border-rule bg-sheet p-4 space-y-4">
             <div>
               <h4 className="text-sm font-bold text-ink mb-1">
                 Expected pieces (Multiplier preview)
@@ -253,7 +253,7 @@ export function CreateOrderModal({
               </p>
             </div>
 
-            <div className="border border-rule rounded-[2px] bg-paper overflow-hidden">
+            <div className="border border-rule rounded-xs bg-paper overflow-hidden">
               <table className="w-full text-xs">
                 <thead className="bg-sheet border-b border-rule">
                   <tr>
@@ -288,7 +288,7 @@ export function CreateOrderModal({
             </div>
 
             {/* Fabric Figures */}
-            <div className="rounded-[2px] border border-rule bg-paper p-3 space-y-2 text-xs">
+            <div className="rounded-xs border border-rule bg-paper p-3 space-y-2 text-xs">
               <div className="flex justify-between text-ink-soft">
                 <span>Standard fabric per piece:</span>
                 <span className="font-bold text-ink">

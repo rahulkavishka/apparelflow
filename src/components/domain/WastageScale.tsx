@@ -51,7 +51,7 @@ export function WastageScale({
       aria-valuenow={wastagePct}
       aria-valuemin={0}
       aria-valuemax={maxScale}
-      className="space-y-3 rounded-[2px] border border-rule bg-paper p-4"
+      className="space-y-3 rounded-xs border border-rule bg-paper p-4"
     >
       <div className="flex items-baseline justify-between border-b border-rule pb-2">
         <span className="text-sm font-bold text-ink">

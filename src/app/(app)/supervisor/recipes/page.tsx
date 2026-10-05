@@ -84,7 +84,7 @@ export default function RecipesPage() {
       </div>
 
       {/* Search & Tooling Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-paper p-2.5 rounded-[2px] border border-rule">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-paper p-2.5 rounded-xs border border-rule">
         <div className="relative flex-1 max-w-sm">
           <Search className="w-3.5 h-3.5 text-ink-soft absolute left-2.5 top-1/2 -translate-y-1/2" />
           <Input
@@ -101,7 +101,7 @@ export default function RecipesPage() {
       </div>
 
       {/* Recipes Table (Desktop) & Responsive Cards (Mobile) */}
-      <div className="border border-rule rounded-[2px] bg-paper overflow-hidden shadow-none">
+      <div className="border border-rule rounded-xs bg-paper overflow-hidden shadow-none">
         {/* Desktop Table View */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -146,7 +146,7 @@ export default function RecipesPage() {
                         {r.stdFabricYards.toFixed(2)}
                       </td>
                       <td className={`${cellPaddingClass} text-right font-bold tabular-nums text-ink whitespace-nowrap`}>
-                        <span className="px-2 py-0.5 rounded-[2px] bg-sheet border border-rule text-ink font-mono font-bold text-xs">
+                        <span className="px-2 py-0.5 rounded-xs bg-sheet border border-rule text-ink font-mono font-bold text-xs">
                           {r.wastageCap.toFixed(1)}%
                         </span>
                       </td>

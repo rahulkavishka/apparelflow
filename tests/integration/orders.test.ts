@@ -203,4 +203,15 @@ describe("Phase 2: Supervisor & Order Engine Integration", () => {
     const json = await res.json();
     expect(json.error.code).toBe("INVALID_STATE_TRANSITION");
   });
+
+  it("GET /api/orders rejects invalid from/to date formats with 400 (M-05)", async () => {
+    const req = new Request("http://localhost:3000/api/orders?from=garbage-date", {
+      headers: { Cookie: supervisorCookie },
+    });
+
+    const res = await listOrdersHandler(req);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error.code).toBe("VALIDATION_ERROR");
+  });
 });

@@ -58,7 +58,7 @@ export function RejectOrderModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[540px] p-6">
+      <DialogContent className="max-w-135 p-6">
         <DialogHeader className="border-b border-rule pb-3">
           <DialogTitle className="text-xl font-bold text-ink">
             Reject batch {orderNo}

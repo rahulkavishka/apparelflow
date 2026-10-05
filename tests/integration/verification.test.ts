@@ -352,4 +352,12 @@ describe("Phase 3: Verification Terminal & Server Hard Stop (T1 - T4)", () => {
     expect(log.rejectionNote).toBe(note);
     expect(log.verifierId).toBe(verifierUser.id);
   });
+
+  it("GET /api/verification/queue rejects pageSize > 50 with 400 (M-04)", async () => {
+    const req = createReq("/api/verification/queue?pageSize=100", "GET", verifierCookie);
+    const res = await getQueue(req, {} as any);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error.code).toBe("VALIDATION_ERROR");
+  });
 });

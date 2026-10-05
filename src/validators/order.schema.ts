@@ -72,8 +72,14 @@ export const listOrdersQuerySchema = z
       .enum(["createdAt", "orderNo", "targetQty", "actualFabricYds", "wastagePct", "status"])
       .default("createdAt"),
     dir: z.enum(["asc", "desc"]).default("desc"),
-    from: z.string().optional(),
-    to: z.string().optional(),
+    from: z
+      .string()
+      .refine((v) => !isNaN(Date.parse(v)), "Invalid date format for 'from'")
+      .optional(),
+    to: z
+      .string()
+      .refine((v) => !isNaN(Date.parse(v)), "Invalid date format for 'to'")
+      .optional(),
     page: z.coerce.number().int().positive().default(1),
     pageSize: z.coerce.number().int().positive().max(50).default(20),
   })

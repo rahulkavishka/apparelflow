@@ -214,7 +214,7 @@ function SewingQueueContent() {
       />
 
       {/* Search & Tooling Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-paper p-2.5 rounded-[2px] border border-rule">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-paper p-2.5 rounded-xs border border-rule">
         <div className="relative flex-1 max-w-md">
           <Search className="w-3.5 h-3.5 text-ink-soft absolute left-2.5 top-1/2 -translate-y-1/2" />
           <Input
@@ -231,7 +231,7 @@ function SewingQueueContent() {
       </div>
 
       {/* Sewing Queue Table (Desktop) & Responsive Cards (Mobile) */}
-      <div className="border border-rule rounded-[2px] bg-paper overflow-hidden shadow-none">
+      <div className="border border-rule rounded-xs bg-paper overflow-hidden shadow-none">
         {/* Desktop Table View */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -300,7 +300,7 @@ function SewingQueueContent() {
                       {/* Assembly Stage Badge */}
                       <td className={`${cellPaddingClass} whitespace-nowrap`}>
                         {isInAssembly ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-[2px] text-[11px] font-bold bg-vat text-paper">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-xs text-[11px] font-bold bg-vat text-paper">
                             In assembly
                           </span>
                         ) : (
@@ -368,7 +368,7 @@ function SewingQueueContent() {
                       <OrderNo orderNo={o.orderNo} />
                     </Link>
                     {isInAssembly ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-[2px] text-[11px] font-bold bg-vat text-paper">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-xs text-[11px] font-bold bg-vat text-paper">
                         In assembly
                       </span>
                     ) : (

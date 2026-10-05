@@ -277,7 +277,7 @@ export default function VerificationTerminalPage({
       {serverBlockerError && (
         <div
           role="alert"
-          className="rounded-[2px] border-l-4 border-l-short-edge border border-rule bg-short-bg p-3.5 text-short-fg text-xs font-semibold flex items-center justify-between"
+          className="rounded-xs border-l-4 border-l-short-edge border border-rule bg-short-bg p-3.5 text-short-fg text-xs font-semibold flex items-center justify-between"
         >
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -297,7 +297,7 @@ export default function VerificationTerminalPage({
       {/* Main Two-Column Terminal Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
         {/* Left Column: Component Count Ledger */}
-        <div className="lg:col-span-2 border border-rule rounded-[2px] bg-paper overflow-hidden shadow-none">
+        <div className="lg:col-span-2 border border-rule rounded-xs bg-paper overflow-hidden shadow-none">
           <div className="bg-sheet p-3 border-b border-rule flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
               <h2 className="text-sm font-bold text-ink">
@@ -350,7 +350,7 @@ export default function VerificationTerminalPage({
                       <td className="p-2.5 pl-3.5">
                         <div className="flex items-center gap-2.5">
                           {item.imageUrl && (
-                            <div className="relative w-8 h-8 shrink-0 bg-sheet rounded-[2px] border border-rule flex items-center justify-center p-0.5">
+                            <div className="relative w-8 h-8 shrink-0 bg-sheet rounded-xs border border-rule flex items-center justify-center p-0.5">
                               <Image
                                 src={item.imageUrl}
                                 alt={item.name}
@@ -439,7 +439,7 @@ export default function VerificationTerminalPage({
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5">
                       {item.imageUrl && (
-                        <div className="relative w-8 h-8 shrink-0 bg-sheet rounded-[2px] border border-rule flex items-center justify-center p-0.5">
+                        <div className="relative w-8 h-8 shrink-0 bg-sheet rounded-xs border border-rule flex items-center justify-center p-0.5">
                           <Image
                             src={item.imageUrl}
                             alt={item.name}
@@ -525,7 +525,7 @@ export default function VerificationTerminalPage({
           />
 
           {/* Gate Terminal Actions Card */}
-          <div className="rounded-[2px] border border-rule bg-paper p-4 space-y-3.5">
+          <div className="rounded-xs border border-rule bg-paper p-4 space-y-3.5">
             <h3 className="text-xs font-bold text-ink uppercase tracking-wider border-b border-rule pb-2">
               Workstation actions
             </h3>

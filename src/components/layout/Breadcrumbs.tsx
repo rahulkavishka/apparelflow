@@ -76,13 +76,13 @@ export function Breadcrumbs() {
             <React.Fragment key={crumb.label}>
               {idx > 0 && <ChevronRight className="w-3.5 h-3.5 text-rule shrink-0" />}
               {isLast || !crumb.href ? (
-                <span className="font-bold text-ink truncate max-w-[90px] sm:max-w-[140px] md:max-w-[200px]" aria-current="page">
+                <span className="font-bold text-ink truncate max-w-22.5 sm:max-w-35 md:max-w-50" aria-current="page">
                   {crumb.label}
                 </span>
               ) : (
                 <Link
                   href={crumb.href}
-                  className="hover:text-ink hover:underline truncate max-w-[80px] sm:max-w-[120px]"
+                  className="hover:text-ink hover:underline truncate max-w-20 sm:max-w-30"
                 >
                   {crumb.label}
                 </Link>

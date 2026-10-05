@@ -246,7 +246,7 @@ export function CommandPalette({ open, onOpenChange, actor }: CommandPaletteProp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         hideCloseButton
-        className="max-w-[560px] p-0 overflow-hidden shadow-2xl rounded-[4px] border border-rule gap-0"
+        className="max-w-140 p-0 overflow-hidden shadow-2xl rounded-sm border border-rule gap-0"
       >
         <DialogTitle className="sr-only">Command Palette</DialogTitle>
         <DialogDescription className="sr-only">
@@ -274,7 +274,7 @@ export function CommandPalette({ open, onOpenChange, actor }: CommandPaletteProp
             <button
               type="button"
               onClick={() => onOpenChange(false)}
-              className="h-7 w-7 flex items-center justify-center rounded-[2px] text-ink-soft hover:text-ink hover:bg-sheet transition-colors cursor-pointer"
+              className="h-7 w-7 flex items-center justify-center rounded-xs text-ink-soft hover:text-ink hover:bg-sheet transition-colors cursor-pointer"
               aria-label="Close command palette"
             >
               <X className="w-3.5 h-3.5" />
@@ -283,7 +283,7 @@ export function CommandPalette({ open, onOpenChange, actor }: CommandPaletteProp
         </div>
 
         {/* Results List */}
-        <div className="max-h-[360px] overflow-y-auto p-2 divide-y divide-rule/60">
+        <div className="max-h-90 overflow-y-auto p-2 divide-y divide-rule/60">
           {/* Order Search Results */}
           {orderResults.length > 0 && (
             <div className="py-2 first:pt-1">
@@ -302,7 +302,7 @@ export function CommandPalette({ open, onOpenChange, actor }: CommandPaletteProp
                   <button
                     key={o.id}
                     onClick={() => handleNavigate(targetPath)}
-                    className="w-full text-left px-2.5 py-2 rounded-[2px] hover:bg-sheet flex items-center justify-between group transition-colors cursor-pointer"
+                    className="w-full text-left px-2.5 py-2 rounded-xs hover:bg-sheet flex items-center justify-between group transition-colors cursor-pointer"
                   >
                     <div>
                       <div className="text-xs font-bold text-ink group-hover:text-vat">
@@ -329,9 +329,9 @@ export function CommandPalette({ open, onOpenChange, actor }: CommandPaletteProp
                 <button
                   key={item.id}
                   onClick={item.onSelect}
-                  className="w-full text-left px-2.5 py-2 rounded-[2px] hover:bg-sheet flex items-center gap-3 group transition-colors cursor-pointer"
+                  className="w-full text-left px-2.5 py-2 rounded-xs hover:bg-sheet flex items-center gap-3 group transition-colors cursor-pointer"
                 >
-                  <div className="p-1 rounded-[2px] bg-sheet group-hover:bg-paper border border-rule shrink-0">
+                  <div className="p-1 rounded-xs bg-sheet group-hover:bg-paper border border-rule shrink-0">
                     {item.icon}
                   </div>
                   <div className="flex-1 min-w-0">

@@ -39,7 +39,7 @@ export function KPICard({
   return (
     <div
       className={cn(
-        "rounded-[2px] border p-3.5 space-y-1 transition-all bg-paper shadow-none select-none",
+        "rounded-xs border p-3.5 space-y-1 transition-all bg-paper shadow-none select-none",
         variantStyles[variant] || variantStyles.default,
         className
       )}

@@ -46,7 +46,7 @@ export const listQueueQuerySchema = z
     sort: z.enum(["submittedAt", "orderNo", "targetQty"]).default("submittedAt"),
     dir: z.enum(["asc", "desc"]).default("asc"),
     page: z.coerce.number().int().positive().default(1),
-    pageSize: z.coerce.number().int().positive().max(100).default(50),
+    pageSize: z.coerce.number().int().positive().max(50).default(50),
   })
   .strict();
 
@@ -54,8 +54,14 @@ export const listLogsQuerySchema = z
   .object({
     q: z.string().trim().max(64, "Search query cannot exceed 64 characters").optional(),
     decision: z.enum(["APPROVED", "REJECTED", "ALL"]).default("ALL"),
-    from: z.string().optional(),
-    to: z.string().optional(),
+    from: z
+      .string()
+      .refine((v) => !isNaN(Date.parse(v)), "Invalid date format for 'from'")
+      .optional(),
+    to: z
+      .string()
+      .refine((v) => !isNaN(Date.parse(v)), "Invalid date format for 'to'")
+      .optional(),
     page: z.coerce.number().int().positive().default(1),
     pageSize: z.coerce.number().int().positive().max(50).default(20),
   })

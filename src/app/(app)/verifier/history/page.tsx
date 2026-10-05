@@ -131,7 +131,7 @@ export default function VerifierHistoryPage() {
       />
 
       {/* Search & Tooling Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-paper p-2.5 rounded-[2px] border border-rule">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-paper p-2.5 rounded-xs border border-rule">
         <div className="relative flex-1 max-w-md">
           <Search className="w-3.5 h-3.5 text-ink-soft absolute left-2.5 top-1/2 -translate-y-1/2" />
           <Input
@@ -148,7 +148,7 @@ export default function VerifierHistoryPage() {
       </div>
 
       {/* History Data Table (Desktop) & Responsive Cards (Mobile) */}
-      <div className="border border-rule rounded-[2px] bg-paper overflow-hidden shadow-none">
+      <div className="border border-rule rounded-xs bg-paper overflow-hidden shadow-none">
         {/* Desktop Table View */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -204,7 +204,7 @@ export default function VerifierHistoryPage() {
                       {/* Decision Badge */}
                       <td className={`${cellPaddingClass} whitespace-nowrap`}>
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-[2px] font-bold text-[11px] ${
+                          className={`inline-flex items-center px-2 py-0.5 rounded-xs font-bold text-[11px] ${
                             isApproved
                               ? "bg-match-bg text-match-fg border border-match-edge/60"
                               : "bg-short-bg text-short-fg border border-short-edge/60"
@@ -271,7 +271,7 @@ export default function VerifierHistoryPage() {
                   <div className="flex items-center justify-between gap-2">
                     <OrderNo orderNo={log.orderNo} />
                     <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-[2px] font-bold text-[11px] ${
+                      className={`inline-flex items-center px-2 py-0.5 rounded-xs font-bold text-[11px] ${
                         isApproved
                           ? "bg-match-bg text-match-fg border border-match-edge/60"
                           : "bg-short-bg text-short-fg border border-short-edge/60"
@@ -360,7 +360,7 @@ export default function VerifierHistoryPage() {
           open={Boolean(selectedSnapshotLog)}
           onOpenChange={(open) => !open && setSelectedSnapshotLog(null)}
         >
-          <DialogContent className="max-w-[560px] p-5 shadow-2xl rounded-[4px] border border-rule">
+          <DialogContent className="max-w-140 p-5 shadow-2xl rounded-sm border border-rule">
             <DialogHeader className="border-b border-rule pb-2.5">
               <DialogTitle className="text-base font-bold text-ink flex items-center justify-between">
                 <span>Verification Audit Snapshot: {selectedSnapshotLog.orderNo}</span>

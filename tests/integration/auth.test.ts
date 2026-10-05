@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { GET as healthHandler } from "@/app/api/health/route";
 import { POST as loginHandler } from "@/app/api/auth/login/route";
+import { POST as logoutHandler } from "@/app/api/auth/logout/route";
 import { GET as meHandler } from "@/app/api/auth/me/route";
 
 describe("Phase 1: Health & Authentication Integration", () => {
@@ -118,5 +119,87 @@ describe("Phase 1: Health & Authentication Integration", () => {
     expect(json.data.email).toBe("verifier@apparelflow.demo");
     expect(json.data.role).toBe("cutting_verifier");
     expect(json.data.fullName).toBe("Kasun Fernando");
+  });
+
+  it("POST /api/auth/login triggers 429 when rotating X-Forwarded-For headers against same email (M-01)", async () => {
+    const targetEmail = "bruteforcetest@apparelflow.demo";
+    let lastStatus = 401;
+
+    // Send 16 requests with distinct X-Forwarded-For IPs to test secondary email-level rate limiter
+    for (let i = 1; i <= 16; i++) {
+      const req = new Request("http://localhost:3000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Forwarded-For": `192.168.1.${i}`,
+        },
+        body: JSON.stringify({
+          email: targetEmail,
+          password: "WrongPassword@123",
+        }),
+      });
+
+      const res = await loginHandler(req);
+      lastStatus = res.status;
+      if (res.status === 429) {
+        const json = await res.json();
+        expect(json.error.code).toBe("RATE_LIMITED");
+        break;
+      }
+    }
+
+    expect(lastStatus).toBe(429);
+  });
+
+  it("POST /api/auth/login rejects oversized password with 400 to prevent bcrypt CPU exhaustion (M-02)", async () => {
+    const hugePassword = "A".repeat(500); // Exceeds 128-char limit
+    const req = new Request("http://localhost:3000/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "supervisor@apparelflow.demo",
+        password: hugePassword,
+      }),
+    });
+
+    const res = await loginHandler(req);
+    expect(res.status).toBe(400);
+
+    const json = await res.json();
+    expect(json.error.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("POST /api/auth/logout blocks cross-origin requests with 403 Forbidden (M-03)", async () => {
+    const req = new Request("http://localhost:3000/api/auth/logout", {
+      method: "POST",
+      headers: {
+        host: "localhost:3000",
+        origin: "https://evil-attacker-site.com",
+      },
+    });
+
+    const res = await logoutHandler(req);
+    expect(res.status).toBe(403);
+
+    const json = await res.json();
+    expect(json.error.code).toBe("FORBIDDEN");
+  });
+
+  it("POST /api/auth/logout clears session cookie on valid same-origin request", async () => {
+    const req = new Request("http://localhost:3000/api/auth/logout", {
+      method: "POST",
+      headers: {
+        host: "localhost:3000",
+        origin: "http://localhost:3000",
+      },
+    });
+
+    const res = await logoutHandler(req);
+    expect(res.status).toBe(200);
+
+    const cookieHeader = res.headers.get("Set-Cookie");
+    expect(cookieHeader).toBeDefined();
+    expect(cookieHeader).toContain("Max-Age=0");
+    expect(cookieHeader).toContain("HttpOnly");
   });
 });

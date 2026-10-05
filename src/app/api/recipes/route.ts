@@ -12,14 +12,23 @@ export const GET = withAuth(
   }
 );
 
-export async function POST() {
-  throw new ForbiddenError("Recipe mutation is not permitted in this system module");
-}
+export const POST = withAuth(
+  [Role.cutting_supervisor, Role.cutting_verifier, Role.sewing_supervisor],
+  async () => {
+    throw new ForbiddenError("Recipe mutation is not permitted in this system module");
+  }
+);
 
-export async function PUT() {
-  throw new ForbiddenError("Recipe mutation is not permitted in this system module");
-}
+export const PUT = withAuth(
+  [Role.cutting_supervisor, Role.cutting_verifier, Role.sewing_supervisor],
+  async () => {
+    throw new ForbiddenError("Recipe mutation is not permitted in this system module");
+  }
+);
 
-export async function DELETE() {
-  throw new ForbiddenError("Recipe mutation is not permitted in this system module");
-}
+export const DELETE = withAuth(
+  [Role.cutting_supervisor, Role.cutting_verifier, Role.sewing_supervisor],
+  async () => {
+    throw new ForbiddenError("Recipe mutation is not permitted in this system module");
+  }
+);

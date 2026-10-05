@@ -30,7 +30,7 @@ export function getCookieFromRequest(req: Request, name: string): string | null 
   return null;
 }
 
-// In-memory user lookup cache with 30s TTL to eliminate redundant DB queries on every request
+// In-memory user lookup cache with 10s TTL to eliminate redundant DB queries on hot paths
 const userSessionCache = new Map<string, { user: Actor; expiresAt: number }>();
 
 export function invalidateSessionCache(userId?: string) {
@@ -52,17 +52,13 @@ export async function getSession(req: Request): Promise<Actor> {
     throw new UnauthenticatedError("Authentication failed: invalid or expired session token");
   }
 
-  // Fast path: Extract claims directly from cryptographically verified token (0ms DB latency)
-  if (payload.email && payload.fullName && payload.role) {
-    return {
-      id: payload.sub,
-      email: payload.email,
-      fullName: payload.fullName,
-      role: payload.role,
-    };
+  // Check in-memory cache to reduce redundant DB queries while keeping TTL short (10s)
+  const cached = userSessionCache.get(payload.sub);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.user;
   }
 
-  // Fallback for legacy tokens without embedded claims
+  // Always verify role against database (D-10 requirement: token role claims are never trusted)
   const user = await prisma.user.findUnique({
     where: { id: payload.sub },
     select: {
@@ -76,6 +72,11 @@ export async function getSession(req: Request): Promise<Actor> {
   if (!user) {
     throw new UnauthenticatedError("User associated with session no longer exists");
   }
+
+  userSessionCache.set(payload.sub, {
+    user,
+    expiresAt: Date.now() + 10_000,
+  });
 
   return user;
 }

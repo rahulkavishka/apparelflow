@@ -43,7 +43,7 @@ export default function SewingOrderDetailPage({
 
   if (error || !order) {
     return (
-      <div className="rounded-[4px] border border-rule bg-paper p-10 text-center space-y-4 max-w-md mx-auto my-12">
+      <div className="rounded-sm border border-rule bg-paper p-10 text-center space-y-4 max-w-md mx-auto my-12">
         <div className="h-10 w-10 mx-auto rounded-full bg-short-bg border border-short-edge flex items-center justify-center text-short-fg font-bold">
           !
         </div>
@@ -73,7 +73,7 @@ export default function SewingOrderDetailPage({
   }));
 
   return (
-    <div className="space-y-6 max-w-[1400px] mx-auto">
+    <div className="space-y-6 max-w-350 mx-auto">
       {/* Header with breadcrumb, traveler tag, stamps, and primary start trigger */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-rule pb-4">
         <div className="space-y-1">
@@ -119,7 +119,7 @@ export default function SewingOrderDetailPage({
 
       {/* Assembly Status Ribbon if Started */}
       {isInAssembly && (
-        <div className="rounded-[4px] border border-rule bg-match-bg/30 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div className="rounded-sm border border-rule bg-match-bg/30 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-2.5">
             <span className="h-3 w-3 rounded-full bg-match-fg shrink-0" />
             <div className="text-xs text-ink">
@@ -137,7 +137,7 @@ export default function SewingOrderDetailPage({
       {/* Two Column Layout (Batch Specification vs Verification Audit Stub) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* Left Column: Batch Specification */}
-        <div className="rounded-[4px] border border-rule bg-paper p-5 space-y-4">
+        <div className="rounded-sm border border-rule bg-paper p-5 space-y-4">
           <div className="flex items-center justify-between border-b border-rule pb-2.5">
             <h2 className="text-sm font-bold text-ink uppercase tracking-wider">
               Batch Traveler Specification
@@ -204,7 +204,7 @@ export default function SewingOrderDetailPage({
       </div>
 
       {/* Verified Component Pieces Breakdown */}
-      <div className="rounded-[4px] border border-rule bg-paper overflow-hidden">
+      <div className="rounded-sm border border-rule bg-paper overflow-hidden">
         <div className="bg-sheet px-4 py-3 border-b border-rule flex items-center justify-between">
           <div>
             <h2 className="text-sm font-bold text-ink uppercase tracking-wider">
@@ -320,7 +320,7 @@ export default function SewingOrderDetailPage({
 
       {/* Assembly Action Banner */}
       {!isInAssembly && (
-        <div className="rounded-[4px] border border-rule bg-paper p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="rounded-sm border border-rule bg-paper p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h3 className="text-base font-bold text-ink">
               Ready for sewing floor assembly

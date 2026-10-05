@@ -59,7 +59,7 @@ export function UserMenu({ actor, collapsed = false, className = "" }: UserMenuP
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className={`w-full flex items-center ${collapsed ? "justify-center p-1.5" : "justify-between p-2"} rounded-[4px] hover:bg-sheet transition-colors cursor-pointer select-none text-left border border-transparent hover:border-rule ${className}`}
+          className={`w-full flex items-center ${collapsed ? "justify-center p-1.5" : "justify-between p-2"} rounded-sm hover:bg-sheet transition-colors cursor-pointer select-none text-left border border-transparent hover:border-rule ${className}`}
           aria-label="User profile and account settings"
           title={collapsed ? `${actor.fullName} (${formatRoleTitle(actor.role)})` : undefined}
         >
@@ -89,7 +89,7 @@ export function UserMenu({ actor, collapsed = false, className = "" }: UserMenuP
         align={collapsed ? "end" : "start"}
         side={collapsed ? "right" : "top"}
         sideOffset={6}
-        className="w-52 p-1.5 shadow-xl border border-rule bg-paper rounded-[4px]"
+        className="w-52 p-1.5 shadow-xl border border-rule bg-paper rounded-sm"
       >
         <DropdownMenuLabel className="font-normal px-2.5 py-2">
           <div className="font-bold text-xs text-ink">{actor.fullName}</div>

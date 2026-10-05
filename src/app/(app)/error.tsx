@@ -16,7 +16,7 @@ export default function AppError({
   }, [error]);
 
   return (
-    <div className="py-8 max-w-[640px]">
+    <div className="py-8 max-w-160">
       <ErrorState
         title="This page couldn't load."
         description="Something went wrong on our side. Try again. If it keeps happening, go back to your queue."

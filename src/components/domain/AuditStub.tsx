@@ -67,7 +67,7 @@ export function AuditStub({
         </dl>
 
         {rejectionNote && (
-          <div className="rounded-[2px] bg-short-bg p-2.5 text-xs border border-short-edge/40">
+          <div className="rounded-xs bg-short-bg p-2.5 text-xs border border-short-edge/40">
             <strong className="text-short-fg block mb-1">Rejection reason:</strong>
             <p className="text-ink">{rejectionNote}</p>
           </div>

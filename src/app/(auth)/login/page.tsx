@@ -94,7 +94,7 @@ export default function LoginPage() {
         </div>
 
         {/* Center Sign In Box */}
-        <div className="w-full max-w-md rounded-[4px] border border-rule bg-paper p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="w-full max-w-md rounded-sm border border-rule bg-paper p-6 sm:p-8 shadow-sm space-y-6">
           <div className="border-b border-rule pb-3.5">
             <h2 className="text-xl sm:text-2xl font-bold text-ink">Sign in</h2>
             <p className="text-sm text-ink-soft mt-1">
@@ -105,7 +105,7 @@ export default function LoginPage() {
           {error && (
             <div
               role="alert"
-              className="rounded-[4px] border-l-4 border-l-short-edge border border-rule bg-short-bg p-3.5 text-sm font-medium text-short-fg"
+              className="rounded-sm border-l-4 border-l-short-edge border border-rule bg-short-bg p-3.5 text-sm font-medium text-short-fg"
             >
               {error}
             </div>

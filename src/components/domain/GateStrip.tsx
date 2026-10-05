@@ -85,7 +85,7 @@ export function GateStrip({
         // V-notch cut into the top-right corner per DESIGN.md: 10px wide, 6px deep
         clipPath: "polygon(0 0, calc(100% - 10px) 0, 100% 6px, 100% 100%, 0 100%)",
       }}
-      className={`min-h-[56px] w-full p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors duration-150 rounded-none ${bgClass}`}
+      className={`min-h-14 w-full p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors duration-150 rounded-none ${bgClass}`}
     >
       <div className="flex items-center gap-3">
         {/* Custom Gate Glyph (28x28) */}

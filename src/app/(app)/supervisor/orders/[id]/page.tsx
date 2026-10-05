@@ -138,7 +138,7 @@ export default function SupervisorOrderDetailPage({
 
   if (error || !order) {
     return (
-      <div className="rounded-[4px] border border-rule bg-paper p-10 text-center space-y-4 max-w-md mx-auto my-12">
+      <div className="rounded-sm border border-rule bg-paper p-10 text-center space-y-4 max-w-md mx-auto my-12">
         <div className="h-10 w-10 mx-auto rounded-full bg-short-bg border border-short-edge flex items-center justify-center text-short-fg font-bold">
           !
         </div>
@@ -170,7 +170,7 @@ export default function SupervisorOrderDetailPage({
   ];
 
   return (
-    <div className="space-y-6 max-w-[1400px] mx-auto">
+    <div className="space-y-6 max-w-350 mx-auto">
       {/* Header bar with Back Link, Order ID, Stamp and Actions */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-rule pb-4">
         <div className="space-y-1">
@@ -227,7 +227,7 @@ export default function SupervisorOrderDetailPage({
       </div>
 
       {/* Lifecycle Progress Stepper */}
-      <div className="bg-paper border border-rule rounded-[4px] p-3">
+      <div className="bg-paper border border-rule rounded-sm p-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {steps.map((step, idx) => {
             const isCompleted = step.done && !step.active && !step.failed;
@@ -271,7 +271,7 @@ export default function SupervisorOrderDetailPage({
       {isRejected && latestRejectionLog && (
         <div
           role="alert"
-          className="rounded-[4px] border-l-4 border-l-short-edge border border-rule bg-short-bg p-4 space-y-1.5"
+          className="rounded-sm border-l-4 border-l-short-edge border border-rule bg-short-bg p-4 space-y-1.5"
         >
           <div className="flex items-center justify-between">
             <span className="text-sm font-bold text-short-fg flex items-center gap-2">
@@ -297,7 +297,7 @@ export default function SupervisorOrderDetailPage({
         {/* Left Column: Batch Specification, Wastage Meter & Edit Form */}
         <div className="space-y-6 lg:col-span-1">
           {/* Batch Specification Card */}
-          <div className="rounded-[4px] border border-rule bg-paper p-5 space-y-4">
+          <div className="rounded-sm border border-rule bg-paper p-5 space-y-4">
             <div className="flex items-center justify-between border-b border-rule pb-2.5">
               <h2 className="text-sm font-bold text-ink uppercase tracking-wider">
                 Batch Specification
@@ -353,7 +353,7 @@ export default function SupervisorOrderDetailPage({
 
           {/* Editable Form for CUTTING_IN_PROGRESS */}
           {isEditable && (
-            <div className="rounded-[4px] border border-rule bg-paper p-5 space-y-4">
+            <div className="rounded-sm border border-rule bg-paper p-5 space-y-4">
               <div className="border-b border-rule pb-2">
                 <h2 className="text-sm font-bold text-ink uppercase tracking-wider">
                   Edit Cutting Inputs
@@ -417,7 +417,7 @@ export default function SupervisorOrderDetailPage({
         {/* Right Column: Component Ledger & Verification Audit Trail */}
         <div className="space-y-6 lg:col-span-2">
           {/* Component Pieces Ledger */}
-          <div className="rounded-[4px] border border-rule bg-paper overflow-hidden">
+          <div className="rounded-sm border border-rule bg-paper overflow-hidden">
             <div className="bg-sheet px-4 py-3 border-b border-rule flex items-center justify-between">
               <div>
                 <h2 className="text-sm font-bold text-ink uppercase tracking-wider">
@@ -499,7 +499,7 @@ export default function SupervisorOrderDetailPage({
 
           {/* Verification Audit Logs */}
           {((order.logs as VerificationLog[] | undefined)?.length ?? 0) > 0 && (
-            <div className="rounded-[4px] border border-rule bg-paper p-5 space-y-4">
+            <div className="rounded-sm border border-rule bg-paper p-5 space-y-4">
               <div className="flex items-center justify-between border-b border-rule pb-2.5">
                 <h2 className="text-sm font-bold text-ink uppercase tracking-wider">
                   Verification History & Audit Trail

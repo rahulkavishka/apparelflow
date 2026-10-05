@@ -49,7 +49,7 @@ export function PeekDrawer({
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <DialogPrimitive.Content
-          className="fixed inset-y-0 right-0 z-50 h-full w-full max-w-[440px] bg-paper shadow-2xl border-l border-rule flex flex-col focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right duration-200"
+          className="fixed inset-y-0 right-0 z-50 h-full w-full max-w-110 bg-paper shadow-2xl border-l border-rule flex flex-col focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right duration-200"
         >
           {/* Accessibility Title & Description */}
           <DialogPrimitive.Title className="sr-only">
@@ -77,7 +77,7 @@ export function PeekDrawer({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 text-ink-soft hover:text-ink hover:bg-sheet rounded-[2px]"
+                className="h-8 w-8 p-0 text-ink-soft hover:text-ink hover:bg-sheet rounded-xs"
                 aria-label="Close drawer"
               >
                 <X className="w-4 h-4" />

@@ -40,6 +40,7 @@ export default function VerifierQueuePage() {
     pageSize: 10,
     total: 0,
     totalPages: 1,
+    totalGarments: 0,
   };
 
   const handleSearchChange = (val: string) => {
@@ -60,7 +61,7 @@ export default function VerifierQueuePage() {
     }
   };
 
-  const totalGarments = queue.reduce((acc, item) => acc + item.targetQty, 0);
+  const totalGarments = meta.totalGarments ?? 0;
 
   const cellPaddingClass = density === "compact" ? "py-2 px-3 text-xs" : "py-3.5 px-3.5 text-sm";
   const headerPaddingClass = density === "compact" ? "py-2 px-3 text-xs" : "py-3 px-3.5 text-xs";

@@ -373,6 +373,7 @@ export async function submitCuttingOrder(actor: Actor, orderId: string) {
     throw new ForbiddenError("Only cutting supervisors can submit orders for verification");
   }
 
+  const now = new Date();
   const res = await prisma.cuttingOrder.updateMany({
     where: {
       id: orderId,
@@ -380,7 +381,7 @@ export async function submitCuttingOrder(actor: Actor, orderId: string) {
     },
     data: {
       status: OrderStatus.PENDING_VERIFICATION,
-      submittedAt: new Date(),
+      submittedAt: now,
     },
   });
 
@@ -393,7 +394,11 @@ export async function submitCuttingOrder(actor: Actor, orderId: string) {
     );
   }
 
-  return getCuttingOrderById(actor, orderId);
+  return {
+    id: orderId,
+    status: OrderStatus.PENDING_VERIFICATION,
+    submittedAt: now.toISOString(),
+  };
 }
 
 export async function recutOrder(actor: Actor, orderId: string) {

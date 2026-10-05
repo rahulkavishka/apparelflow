@@ -285,21 +285,6 @@ export async function getSewingOrder(orderId: string): Promise<SewingOrderDetail
  * Status remains VERIFIED to preserve literal queue filtering.
  */
 export async function startSewingAssembly(orderId: string, actor: Actor) {
-  const order = await prisma.cuttingOrder.findUnique({
-    where: { id: orderId },
-  });
-
-  if (!order || order.status !== OrderStatus.VERIFIED) {
-    throw new NotFoundError("Verified cutting order not found in sewing queue.");
-  }
-
-  if (order.sewingStartedAt !== null) {
-    throw new ConflictError(
-      "SEWING_ALREADY_STARTED",
-      "Sewing assembly has already been started for this order."
-    );
-  }
-
   const now = new Date();
 
   const updated = await prisma.cuttingOrder.updateMany({
@@ -315,10 +300,20 @@ export async function startSewingAssembly(orderId: string, actor: Actor) {
   });
 
   if (updated.count === 0) {
-    throw new ConflictError(
-      "SEWING_ALREADY_STARTED",
-      "Sewing assembly was started concurrently by another operator."
-    );
+    const order = await prisma.cuttingOrder.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order || order.status !== OrderStatus.VERIFIED) {
+      throw new NotFoundError("Verified cutting order not found in sewing queue.");
+    }
+
+    if (order.sewingStartedAt !== null) {
+      throw new ConflictError(
+        "SEWING_ALREADY_STARTED",
+        "Sewing assembly has already been started for this order."
+      );
+    }
   }
 
   return {

@@ -47,6 +47,46 @@ export interface VerificationQueueResponse {
     pageSize: number;
     total: number;
     totalPages: number;
+    totalGarments: number;
+  };
+}
+
+export interface VerificationHistoryLog {
+  id: string;
+  orderId: string;
+  orderNo: string;
+  recipe: {
+    recipeCode: string;
+    name: string;
+    wastageCap: number;
+  };
+  targetQty: number;
+  fabricRollId: string;
+  decision: "APPROVED" | "REJECTED";
+  rejectionNote: string | null;
+  wastagePct: number;
+  varianceSnapshot: any;
+  timestamp: string;
+  verifier: {
+    id: string;
+    fullName: string;
+    role: string;
+  };
+}
+
+export interface VerificationHistoryResponse {
+  logs: VerificationHistoryLog[];
+  total: number;
+  meta: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+    counts: {
+      ALL: number;
+      APPROVED: number;
+      REJECTED: number;
+    };
   };
 }
 
@@ -72,7 +112,6 @@ export function useVerificationQueue(params: VerificationQueueParams = {}) {
     enabled: params.enabled ?? true,
     retry: false,
     placeholderData: keepPreviousData,
-    refetchInterval: 15_000,
   });
 }
 
@@ -168,7 +207,7 @@ export function useVerificationHistory(params: VerificationHistoryParams = {}) {
   const queryString = queryParams.toString();
   const url = `/api/verification/logs${queryString ? `?${queryString}` : ""}`;
 
-  return useQuery({
+  return useQuery<VerificationHistoryResponse>({
     queryKey: ["verificationHistory", params],
     queryFn: async () => {
       const res = await fetch(url);

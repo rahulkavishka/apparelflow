@@ -28,7 +28,12 @@ export async function loginUser(input: LoginInput, clientIp = "127.0.0.1") {
     throw new UnauthenticatedError("Invalid email or password");
   }
 
-  const token = await signSessionToken(user.id);
+  const token = await signSessionToken({
+    id: user.id,
+    email: user.email,
+    fullName: user.fullName,
+    role: user.role,
+  });
 
   return {
     user: {

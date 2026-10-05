@@ -38,7 +38,10 @@ export default function VerifierHistoryPage() {
     pageSize: 10,
     total: 0,
     totalPages: 1,
+    counts: { ALL: 0, APPROVED: 0, REJECTED: 0 },
   };
+
+  const counts = meta.counts || { ALL: meta.total, APPROVED: 0, REJECTED: 0 };
 
   const handleDecisionChange = (val: "ALL" | "APPROVED" | "REJECTED") => {
     setDecisionFilter(val);
@@ -62,13 +65,10 @@ export default function VerifierHistoryPage() {
     }
   };
 
-  const approvedCount = logs.filter((l: any) => l.decision === "APPROVED").length;
-  const rejectedCount = logs.filter((l: any) => l.decision === "REJECTED").length;
-
   const decisionOptions: FilterChipOption<"ALL" | "APPROVED" | "REJECTED">[] = [
-    { value: "ALL", label: "All decisions", count: meta.total },
-    { value: "APPROVED", label: "Approved only", count: approvedCount, badgeVariant: "match" },
-    { value: "REJECTED", label: "Rejected only", count: rejectedCount, badgeVariant: "short" },
+    { value: "ALL", label: "All decisions", count: counts.ALL },
+    { value: "APPROVED", label: "Approved only", count: counts.APPROVED, badgeVariant: "match" },
+    { value: "REJECTED", label: "Rejected only", count: counts.REJECTED, badgeVariant: "short" },
   ];
 
   const cellPaddingClass = density === "compact" ? "py-2 px-3 text-xs" : "py-3.5 px-3.5 text-sm";
@@ -103,22 +103,22 @@ export default function VerifierHistoryPage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <KPICard
           title="Recorded decisions"
-          value={meta.total}
+          value={counts.ALL}
           subtitle="Signed gatekeeper reviews"
           icon={<History className="w-4 h-4" />}
         />
         <KPICard
           title="Approved batches"
-          value={approvedCount}
+          value={counts.APPROVED}
           subtitle="Passed to sewing assembly"
           variant="match"
           icon={<CheckCircle2 className="w-4 h-4" />}
         />
         <KPICard
           title="Rejected batches"
-          value={rejectedCount}
+          value={counts.REJECTED}
           subtitle="Returned for re-cutting"
-          variant={rejectedCount > 0 ? "short" : "default"}
+          variant={counts.REJECTED > 0 ? "short" : "default"}
           icon={<AlertTriangle className="w-4 h-4" />}
         />
       </div>

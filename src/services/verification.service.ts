@@ -106,7 +106,7 @@ export async function listVerificationQueue(opts: ListQueueOpts = {}) {
   else if (opts.sort === "targetQty") orderBy = { targetQty: direction };
   else if (opts.sort === "submittedAt") orderBy = { submittedAt: direction };
 
-  const [orders, total] = await Promise.all([
+  const [orders, total, garmentsAggregate] = await Promise.all([
     prisma.cuttingOrder.findMany({
       where,
       include: {
@@ -125,7 +125,13 @@ export async function listVerificationQueue(opts: ListQueueOpts = {}) {
       take: pageSize,
     }),
     prisma.cuttingOrder.count({ where }),
+    prisma.cuttingOrder.aggregate({
+      where,
+      _sum: { targetQty: true },
+    }),
   ]);
+
+  const totalGarments = garmentsAggregate._sum.targetQty || 0;
 
   const queue = orders.map((o) => {
     const totalItems = o.items.length;
@@ -152,6 +158,7 @@ export async function listVerificationQueue(opts: ListQueueOpts = {}) {
       pageSize,
       total,
       totalPages: Math.ceil(total / pageSize),
+      totalGarments,
     },
   };
 }
@@ -267,8 +274,11 @@ export async function saveCounts(
   const order = await prisma.cuttingOrder.findUnique({
     where: { id: orderId },
     include: {
+      recipe: true,
+      createdBy: { select: { id: true, fullName: true } },
       items: {
         include: { component: true },
+        orderBy: { component: { componentName: "asc" } },
       },
     },
   });
@@ -295,24 +305,26 @@ export async function saveCounts(
     }
   }
 
-  // Update items inside transaction
-  await prisma.$transaction(async (tx) => {
-    for (const c of counts) {
+  // Update items in parallel batch transaction & update in-memory item values
+  await prisma.$transaction(
+    counts.map((c) => {
       const item = existingItemMap.get(c.componentId)!;
       const light = evaluateTrafficLight(c.actualQty, item.expectedQty);
+      item.actualQty = c.actualQty;
+      item.status = light.prismaStatus as any;
 
-      await tx.verificationItem.update({
+      return prisma.verificationItem.update({
         where: { id: item.id },
         data: {
           actualQty: c.actualQty,
           status: light.prismaStatus,
         },
       });
-    }
-  });
+    })
+  );
 
-  // Re-fetch updated order
-  return getVerificationOrder(orderId);
+  // Return formatted order directly from in-memory object (eliminates extra network round-trip)
+  return formatVerificationOrder(order);
 }
 
 /**
@@ -398,25 +410,22 @@ export async function approveVerificationOrder(
     };
   });
 
-  // 5. Atomic transaction: write immutable log + conditional order status update
+  // 5. Atomic batch transaction: write immutable log + conditional order status update (single round-trip)
   const now = new Date();
   try {
-    await prisma.$transaction(async (tx) => {
-      // Create log
-      await tx.verificationLog.create({
+    const [, updated] = await prisma.$transaction([
+      prisma.verificationLog.create({
         data: {
           orderId: order.id,
-          verifierId: actor.id, // Stored strictly from verified session
+          verifierId: actor.id,
           decision: Decision.APPROVED,
           rejectionNote: null,
           wastagePct: wastage,
           varianceSnapshot: snapshot,
           timestamp: now,
         },
-      });
-
-      // Update order to VERIFIED
-      const updated = await tx.cuttingOrder.updateMany({
+      }),
+      prisma.cuttingOrder.updateMany({
         where: {
           id: order.id,
           status: OrderStatus.PENDING_VERIFICATION,
@@ -425,15 +434,15 @@ export async function approveVerificationOrder(
           status: OrderStatus.VERIFIED,
           verifiedAt: now,
         },
-      });
+      }),
+    ]);
 
-      if (updated.count === 0) {
-        throw new ConflictError(
-          "INVALID_STATE_TRANSITION",
-          "Order state changed concurrently. Approval aborted."
-        );
-      }
-    });
+    if (updated.count === 0) {
+      throw new ConflictError(
+        "INVALID_STATE_TRANSITION",
+        "Order state changed concurrently. Approval aborted."
+      );
+    }
   } catch (err: any) {
     // Check if Postgres trigger raised gate exception
     if (err.code === "23514" || (err.message && err.message.includes("approval gate"))) {
@@ -518,9 +527,8 @@ export async function rejectVerificationOrder(
 
   const now = new Date();
 
-  await prisma.$transaction(async (tx) => {
-    // 1. Insert REJECTED log
-    await tx.verificationLog.create({
+  const [, updated] = await prisma.$transaction([
+    prisma.verificationLog.create({
       data: {
         orderId: order.id,
         verifierId: actor.id,
@@ -530,10 +538,8 @@ export async function rejectVerificationOrder(
         varianceSnapshot: snapshot,
         timestamp: now,
       },
-    });
-
-    // 2. Update order to REJECTED
-    const updated = await tx.cuttingOrder.updateMany({
+    }),
+    prisma.cuttingOrder.updateMany({
       where: {
         id: order.id,
         status: OrderStatus.PENDING_VERIFICATION,
@@ -541,15 +547,15 @@ export async function rejectVerificationOrder(
       data: {
         status: OrderStatus.REJECTED,
       },
-    });
+    }),
+  ]);
 
-    if (updated.count === 0) {
-      throw new ConflictError(
-        "INVALID_STATE_TRANSITION",
-        "Order state changed concurrently. Rejection aborted."
-      );
-    }
-  });
+  if (updated.count === 0) {
+    throw new ConflictError(
+      "INVALID_STATE_TRANSITION",
+      "Order state changed concurrently. Rejection aborted."
+    );
+  }
 
   return {
     orderId: order.id,
@@ -576,12 +582,9 @@ export async function listVerificationHistory(opts: ListLogsOpts = {}) {
   const pageSize = Math.min(opts.pageSize || 20, 50);
   const skip = (page - 1) * pageSize;
 
-  const where: Record<string, unknown> = {};
-  if (opts.decision && opts.decision !== "ALL") {
-    where.decision = opts.decision;
-  }
+  const baseWhere: Record<string, unknown> = {};
   if (opts.q) {
-    where.OR = [
+    baseWhere.OR = [
       { order: { orderNo: { contains: opts.q, mode: "insensitive" } } },
       { order: { fabricRollId: { contains: opts.q, mode: "insensitive" } } },
       { order: { recipe: { name: { contains: opts.q, mode: "insensitive" } } } },
@@ -592,10 +595,15 @@ export async function listVerificationHistory(opts: ListLogsOpts = {}) {
     const dateFilter: Record<string, Date> = {};
     if (opts.from) dateFilter.gte = new Date(opts.from);
     if (opts.to) dateFilter.lte = new Date(opts.to);
-    where.timestamp = dateFilter;
+    baseWhere.timestamp = dateFilter;
   }
 
-  const [logs, total] = await Promise.all([
+  const where = {
+    ...baseWhere,
+    ...(opts.decision && opts.decision !== "ALL" ? { decision: opts.decision } : {}),
+  };
+
+  const [logs, total, decisionGroups] = await Promise.all([
     prisma.verificationLog.findMany({
       where,
       include: {
@@ -620,7 +628,24 @@ export async function listVerificationHistory(opts: ListLogsOpts = {}) {
       take: pageSize,
     }),
     prisma.verificationLog.count({ where }),
+    prisma.verificationLog.groupBy({
+      by: ["decision"],
+      where: baseWhere,
+      _count: { decision: true },
+    }),
   ]);
+
+  const counts: Record<string, number> = {
+    ALL: 0,
+    APPROVED: 0,
+    REJECTED: 0,
+  };
+  for (const g of decisionGroups) {
+    if (g.decision in counts) {
+      counts[g.decision] = g._count.decision;
+      counts.ALL += g._count.decision;
+    }
+  }
 
   const formattedLogs = logs.map((log) => ({
     id: log.id,
@@ -649,6 +674,7 @@ export async function listVerificationHistory(opts: ListLogsOpts = {}) {
       pageSize,
       total,
       totalPages: Math.ceil(total / pageSize),
+      counts,
     },
   };
 }

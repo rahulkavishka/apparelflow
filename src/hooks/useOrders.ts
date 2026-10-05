@@ -82,7 +82,6 @@ export function useOrdersList(params: OrdersListParams = {}) {
     enabled: params.enabled ?? true,
     retry: false,
     placeholderData: keepPreviousData,
-    refetchInterval: 30_000,
   });
 }
 

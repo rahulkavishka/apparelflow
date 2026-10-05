@@ -75,7 +75,6 @@ export function useSewingQueue(params: SewingQueueParams = {}) {
     enabled: params.enabled ?? true,
     retry: false,
     placeholderData: keepPreviousData,
-    refetchInterval: 20_000,
   });
 }
 

@@ -99,6 +99,10 @@ model CuttingOrder {
   logs      VerificationLog[]
 
   @@index([status, createdAt(sort: Desc)])
+  @@index([status, submittedAt(sort: Asc)])
+  @@index([status, verifiedAt(sort: Desc)])
+  @@index([recipeId])
+  @@index([fabricRollId])
   @@index([createdById])
   @@map("cutting_orders")
 }

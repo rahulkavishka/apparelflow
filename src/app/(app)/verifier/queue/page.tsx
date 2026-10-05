@@ -12,7 +12,7 @@ import { Pagination } from "@/components/ui/Pagination";
 import { DensityToggle, TableDensity } from "@/components/ui/DensityToggle";
 import { TableLoadingRow } from "@/components/ui/LoadingSpinner";
 import { useVerificationQueue } from "@/hooks/useVerification";
-import { Search, Clock, ArrowRight, CheckCircle2, ShieldAlert, RefreshCw } from "lucide-react";
+import { Search, Clock, ArrowRight, CheckCircle2, RefreshCw } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -92,7 +92,7 @@ export default function VerifierQueuePage() {
       </div>
 
       {/* KPI Stats Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <KPICard
           title="Batches in queue"
           value={meta.total}
@@ -103,14 +103,7 @@ export default function VerifierQueuePage() {
           title="Garments waiting"
           value={totalGarments}
           subtitle="Total batch units in queue"
-          icon={<CheckCircle2 className="w-4 h-4" />}
-        />
-        <KPICard
-          title="Quality Gatekeeper"
-          value="Locked Stop"
-          subtitle="Zero-defect gate enforcement active"
-          variant="vat"
-          icon={<ShieldAlert className="w-4 h-4" />}
+          icon={<CheckCircle2 className="w-4 h-4 text-vat" />}
         />
       </div>
 

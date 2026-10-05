@@ -44,3 +44,15 @@ This running log captures real-time architectural scrutiny, AI code audits, dete
 - **Human Refactoring:**
   Aligned `@types/node` to `@types/node@^22.20.5`, resolving peer dependency trees cleanly without resorting to dangerous `--force` or `--legacy-peer-deps` flags.
 - **Commit / Phase:** Phase 1 (`chore: test setup`)
+
+---
+
+## Log Entry 4: Zod 4 Alpha/Beta Breaking Parameter Types on Primitive Number Validators
+- **AI Tool / Task:** Order schema validation generation.
+- **Symptom / Error:**
+  `error TS2353: Object literal may only specify known properties, and 'invalid_type_error' does not exist in type '$ZodNumberParams'.`
+- **Root Cause:**
+  AI models typically generate legacy Zod 3 syntax like `z.number({ invalid_type_error: "..." })`. The project resolution pulled `zod@^4.6.5`, where parameter options on primitive builders were unified to `{ message: "..." }`.
+- **Human Refactoring:**
+  Refactored all schemas in `src/validators/order.schema.ts` to use `{ message: "..." }` and chained `.int()` / `.min()` rules, maintaining full type safety and eliminating TS compilation failures during production build.
+- **Commit / Phase:** Phase 2 (`feat(validation): strict zod schemas for orders`)

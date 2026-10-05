@@ -1,0 +1,564 @@
+openapi: 3.0.3
+info:
+  title: ApparelFlow ERP — Cutting Operations & Gatekeeper Verification Terminal
+  version: 1.0.0
+  description: >
+    Production batch verification and sewing queue gatekeeper API.
+    Governed by the law: A cutting batch can never enter the Sewing Queue without
+    explicit verification where every component is counted and none has a shortage (actual < expected).
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: https://apparelflow.vercel.app
+    description: Production deployment
+
+paths:
+  /api/health:
+    get:
+      summary: Liveness and database connectivity health check
+      responses:
+        '200':
+          description: Service is healthy and database is connected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/auth/login:
+    post:
+      summary: Authenticate persona and issue session cookie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: af_session=jwt.token.here; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=28800
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/auth/logout:
+    post:
+      summary: Terminate session and clear cookie
+      security:
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Logged out successfully
+
+  /api/auth/me:
+    get:
+      summary: Get active authenticated user profile
+      security:
+        - CookieAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/recipes:
+    get:
+      summary: List all garment recipes with component BOMs
+      security:
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Recipe list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeListResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/orders:
+    get:
+      summary: List cutting orders for supervisor
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [CUTTING_IN_PROGRESS, PENDING_VERIFICATION, REJECTED, VERIFIED]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: List of cutting orders
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      summary: Create new cutting order
+      security:
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Order created in CUTTING_IN_PROGRESS
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/orders/{id}:
+    get:
+      summary: Get cutting order detail
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Cutting order details
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      summary: Edit cutting order in progress
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrderRequest'
+      responses:
+        '200':
+          description: Order updated
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/orders/{id}/submit:
+    post:
+      summary: Submit cutting order to verification queue
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Order submitted to PENDING_VERIFICATION
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/orders/{id}/recut:
+    post:
+      summary: Reset rejected batch for re-cutting
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Order reset to CUTTING_IN_PROGRESS
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/verification/queue:
+    get:
+      summary: List pending batches awaiting verification
+      security:
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Pending verification queue
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/verification/orders/{id}:
+    get:
+      summary: Load Verification Terminal data
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Terminal data with items and live statuses
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/verification/orders/{id}/counts:
+    put:
+      summary: Save physical counts for batch components
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveCountsRequest'
+      responses:
+        '200':
+          description: Counts saved and traffic lights computed
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/verification/orders/{id}/approve:
+    post:
+      summary: Gatekeeper approval (strictly server-enforced)
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Batch approved and marked VERIFIED
+        '422':
+          description: Approval blocked due to component shortage or uncounted item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GateErrorResponse'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/verification/orders/{id}/reject:
+    post:
+      summary: Reject batch with mandatory note
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectRequest'
+      responses:
+        '200':
+          description: Batch rejected
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/sewing/queue:
+    get:
+      summary: Sewing queue (VERIFIED batches only)
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: startedFilter
+          in: query
+          schema:
+            type: string
+            enum: [all, awaiting, started]
+            default: all
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: Verified sewing queue
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/sewing/orders/{id}:
+    get:
+      summary: Verified order detail and immutable audit stub
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Verified batch details for sewing assembly
+        '404':
+          description: Order not found or not in VERIFIED state
+
+  /api/sewing/orders/{id}/start:
+    post:
+      summary: Start sewing assembly for verified batch
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Sewing assembly started
+        '409':
+          description: Assembly already started
+        '404':
+          description: Batch is not verified
+
+components:
+  securitySchemes:
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: af_session
+
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            status: { type: string, example: "healthy" }
+            db: { type: string, example: "ok" }
+            timestamp: { type: string, format: date-time }
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email, example: "verifier@apparelflow.demo" }
+        password: { type: string, example: "Verifier@123" }
+
+    LoginResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        fullName: { type: string }
+        role: { type: string, enum: [cutting_supervisor, cutting_verifier, sewing_supervisor] }
+
+    UserResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/User'
+
+    RecipeListResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            recipes:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: string, format: uuid }
+                  recipeCode: { type: string, example: "REC-BL01" }
+                  name: { type: string, example: "Casual Blouse" }
+                  category: { type: string, example: "Tops" }
+                  stdFabricYards: { type: number, example: 1.8 }
+                  wastageCap: { type: number, example: 5.0 }
+
+    CreateOrderRequest:
+      type: object
+      required: [recipeId, targetQty, fabricRollId, actualFabricYds]
+      additionalProperties: false
+      properties:
+        recipeId: { type: string, format: uuid }
+        targetQty: { type: integer, minimum: 1, maximum: 100000, example: 50 }
+        fabricRollId: { type: string, pattern: '^[A-Z0-9-]{3,40}$', example: "FAB-ROLL-882" }
+        actualFabricYds: { type: number, minimum: 0.01, maximum: 99999.99, example: 94.5 }
+
+    UpdateOrderRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        targetQty: { type: integer, minimum: 1, maximum: 100000 }
+        fabricRollId: { type: string, pattern: '^[A-Z0-9-]{3,40}$' }
+        actualFabricYds: { type: number, minimum: 0.01, maximum: 99999.99 }
+
+    SaveCountsRequest:
+      type: object
+      required: [counts]
+      properties:
+        counts:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [componentId, actualQty]
+            properties:
+              componentId: { type: string, format: uuid }
+              actualQty: { type: integer, minimum: 0, example: 98 }
+
+    RejectRequest:
+      type: object
+      required: [note]
+      properties:
+        note:
+          type: string
+          minLength: 5
+          maxLength: 500
+          example: "Sleeve cuffs short by 2 pieces due to fabric defect. Recut needed."
+
+    GateErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string, enum: [GATE_SHORTAGE, GATE_UNCOUNTED] }
+            message: { type: string }
+            details:
+              type: object
+              properties:
+                blockers:
+                  type: array
+                  items: { type: string }
+
+  responses:
+    ValidationError:
+      description: Validation error or malformed input
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code: { type: string, example: "VALIDATION_ERROR" }
+                  message: { type: string }
+                  details: { type: object }
+
+    Unauthorized:
+      description: Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code: { type: string, example: "UNAUTHENTICATED" }
+                  message: { type: string, example: "Authentication required" }
+
+    Forbidden:
+      description: Current user role lacks permission
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code: { type: string, example: "FORBIDDEN" }
+                  message: { type: string, example: "Access forbidden" }
+
+    NotFound:
+      description: Requested resource was not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code: { type: string, example: "NOT_FOUND" }
+                  message: { type: string, example: "Resource not found" }
+
+    Conflict:
+      description: Invalid state transition or concurrent modification conflict
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code: { type: string, example: "INVALID_STATE_TRANSITION" }
+                  message: { type: string, example: "Action not permitted in current status" }

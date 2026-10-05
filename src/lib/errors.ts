@@ -17,6 +17,12 @@ export class ValidationError extends AppError {
   }
 }
 
+export class BadRequestError extends AppError {
+  constructor(message = "Bad request", details?: unknown) {
+    super(400, "BAD_REQUEST", message, details);
+  }
+}
+
 export class UnauthenticatedError extends AppError {
   constructor(message = "Invalid email or password") {
     super(401, "UNAUTHENTICATED", message);

@@ -202,4 +202,19 @@ describe("Phase 1: Health & Authentication Integration", () => {
     expect(cookieHeader).toContain("Max-Age=0");
     expect(cookieHeader).toContain("HttpOnly");
   });
+
+  it("GET /api/auth/me handles malformed URI percent-encoded cookie with 401 instead of 500 error", async () => {
+    const req = new Request("http://localhost:3000/api/auth/me", {
+      method: "GET",
+      headers: {
+        Cookie: "af_session=%E0%A4%A", // Malformed UTF-8 sequence that throws URIError in decodeURIComponent
+      },
+    });
+
+    const res = await meHandler(req);
+    expect(res.status).toBe(401);
+
+    const json = await res.json();
+    expect(json.error.code).toBe("UNAUTHENTICATED");
+  });
 });

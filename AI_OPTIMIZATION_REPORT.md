@@ -260,11 +260,11 @@ Beyond fixing syntax and type errors, human engineering was required to transfor
 
 ---
 
-### Refactor 4: Zero-DB Cryptographic Auth & Pipelined Batch Transactions
+### Refactor 4: Cached DB Role Verification & Pipelined Batch Transactions
 - **AI Approach:**
-  Standard AI templates performed `prisma.user.findUnique` in `withAuth` on every request, followed by interactive `prisma.$transaction(async (tx) => { ... })` blocks and post-mutation re-fetches. Over remote cloud connections, this accumulated 5–8 sequential round-trips ($2.5\text{s} - 6\text{s}$ latency).
+  Standard AI templates performed an uncached `prisma.user.findUnique` in `withAuth` on every request, followed by interactive `prisma.$transaction(async (tx) => { ... })` blocks and post-mutation re-fetches. Over remote cloud connections, this accumulated 5–8 sequential round-trips ($2.5\text{s} - 6\text{s}$ latency).
 - **Human Hardening:**
-  1. Embedded authenticated claims (`id`, `email`, `fullName`, `role`) directly into the HS256-signed JWT token (`jwt.ts`), allowing `getSession` to authenticate in **0.01ms in-memory** with **0 database queries**.
+  1. Removed the per-request `findUnique` for speed, then reintroduced DB role verification behind a 10s in-memory cache after finding that token-trusted roles allowed stale privileges (C-01). Net result: identity is verified from the signed JWT, role is re-read from the DB at most every 10s per instance, skipping redundant DB queries on hot paths while ensuring role changes take effect within about 10 seconds.
   2. Replaced interactive transactions with Prisma pipelined batch transactions (`prisma.$transaction([ ... ])`) in `approveVerificationOrder` and `rejectVerificationOrder`.
   3. Returned formatted mutation results directly from updated state without multi-table re-fetch queries (`submitOrder` dropped from 4,505ms to 1,009ms).
   4. Removed aggressive background polling timers (`refetchInterval: 15_000`) and increased TanStack Query `staleTime` to 30 seconds for instant cached view transitions.
@@ -284,10 +284,10 @@ ApparelFlow enforces a 5-tier defense-in-depth model where no single layer can c
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │ HTTP Request
 ┌───────────────────────────────────▼────────────────────────────────────┐
-│ Tier 2: RBAC Route Guards (withAuth & In-Memory JWT)                   │
+│ Tier 2: RBAC Route Guards (withAuth & 10s Cached Identity)             │
 │ • Validates cryptographic JWT (HS256, 8h expiry)                       │
-│ • Extracts verified claims in-memory without DB round-trips            │
-│ • Immediate 403 Forbidden before body parsing or DB reads              │
+│ • Identity from signed JWT; role re-read from DB at most every 10s     │
+│ • Immediate 403 Forbidden before body parsing or business logic        │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
 ┌───────────────────────────────────▼────────────────────────────────────┐

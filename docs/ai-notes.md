@@ -122,17 +122,17 @@ This running log captures real-time architectural scrutiny, AI code audits, dete
 
 ---
 
-## Log Entry 10: Multi-Round-Trip Latency Overhead & Zero-DB Cryptographic Auth Optimization
+## Log Entry 10: Multi-Round-Trip Latency Overhead & Cached DB Role Verification
 - **AI Tool / Task:** Backend API route performance and database round-trip latency optimization.
 - **Symptom / Error:**
-  CRUD operations over remote cloud database connection exhibited 2s–6s latency, primarily driven by sequential database queries per request.
+  CRUD operations over remote cloud database connection exhibited latency, primarily driven by sequential database queries per request.
 - **Root Cause:**
   1. `withAuth` executed `prisma.user.findUnique` on every single request to look up user roles.
   2. Mutations like `saveCounts` and `submitCuttingOrder` performed deep multi-table re-fetches after updating.
   3. Interactive transactions required multi-round-trip handshakes (`BEGIN`, `INSERT`, `UPDATE`, `COMMIT`).
   4. Concurrent background polling intervals (`refetchInterval: 15_000`) congested the HTTP connection pipeline.
 - **Human Refactoring:**
-  1. **Zero-DB Auth:** Embedded user claims (`id`, `email`, `fullName`, `role`) into the cryptographically signed JWT payload, enabling `getSession` to authenticate requests in **0.01ms in-memory** with zero database round-trips.
+  1. **Cached Role Verification (D-10):** Removed the per-request `findUnique` for speed, then reintroduced DB role verification behind a 10s in-memory cache after finding that token-trusted roles allowed stale privileges (C-01). Net result: most hot-path requests skip the DB, but role changes take effect within about 10s.
   2. **Pipelined Batch Transactions:** Converted multi-step mutation transactions in `approveVerificationOrder` and `rejectVerificationOrder` to `prisma.$transaction([ ... ])` arrays, cutting 4 network round-trips down to 1.
   3. **Direct Return:** Formatted mutation results directly from updated state without re-querying deep relation trees (`submitOrder` dropped from 4,505ms to 1,009ms in tests).
   4. **Polling Eradication & Cache Tuning:** Removed aggressive background `refetchInterval` timers and increased default TanStack Query `staleTime` to 30s.

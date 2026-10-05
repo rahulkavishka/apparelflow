@@ -63,8 +63,8 @@ Security is implemented using **defense-in-depth** across all architectural tier
 
 #### 3.3 Zero-Trust Identity Verification (Decision D-10)
 - In traditional JWT setups, API routes blindly trust the `role` claim in the decoded payload. If a user's role is revoked or modified, the token remains valid until expiration.
-- **ApparelFlow Solution:** The JWT proves *identity* (`payload.sub`), but **authorization roles are re-verified against the database** `users` table on every request.
-- **Performance Optimization:** An in-memory cache with a 10-second TTL (`userSessionCache`) eliminates redundant database lookups on hot API paths while ensuring administrative deactivations or role modifications take effect almost immediately. Logging out immediately purges the user's cached session.
+- **ApparelFlow Solution:** The JWT proves *identity* (`payload.sub`), but **authorization roles are re-verified against the database** `users` table.
+- **Performance & Propagation:** An in-memory cache with a 10-second TTL (`userSessionCache`) eliminates redundant database lookups on hot API paths while ensuring administrative deactivations or role modifications take effect within about 10 seconds across serverless instances. Note: The cache is scoped per serverless container instance, so logout immediately purges the active instance while other concurrent instances re-verify against the DB upon 10s TTL expiry. Expired entries in `userSessionCache` remain in memory until overwritten or instance recycle (negligible memory footprint).
 
 #### 3.4 Multi-Tiered Rate Limiting
 To prevent credential stuffing, brute-force attacks, and `X-Forwarded-For` header spoofing bypasses, `loginUser` enforces a **3-tier rate limiting strategy**:

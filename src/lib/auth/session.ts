@@ -24,7 +24,12 @@ export function getCookieFromRequest(req: Request, name: string): string | null 
   const cookies = cookieHeader.split(";").map((c) => c.trim());
   for (const cookie of cookies) {
     if (cookie.startsWith(`${name}=`)) {
-      return decodeURIComponent(cookie.substring(name.length + 1));
+      const raw = cookie.substring(name.length + 1);
+      try {
+        return decodeURIComponent(raw);
+      } catch {
+        return null;
+      }
     }
   }
   return null;

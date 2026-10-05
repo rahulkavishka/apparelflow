@@ -11,6 +11,7 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
+    "db:reset": "tsx scripts/reset-db.ts",
     "db:studio": "prisma studio",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",

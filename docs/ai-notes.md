@@ -82,3 +82,27 @@ This running log captures real-time architectural scrutiny, AI code audits, dete
   Audited all service handlers to reference `actor.id` consistently, ensuring verified sessions directly populate the immutable audit log foreign keys without client payload leakage.
 - **Commit / Phase:** Phase 3 (`feat(verification): approve reject services`)
 
+---
+
+## Log Entry 7: Cloud Database Hook Timeout & Enforced Hook Thresholds
+- **AI Tool / Task:** Writing end-to-end integration tests for Phase 4 (Sewing queue isolation, start assembly, and T5 tests).
+- **Symptom / Error:**
+  `Error: Hook timed out in 10000ms.` in `tests/integration/sewing.test.ts:20:3`.
+- **Root Cause:**
+  Vitest defaults `hookTimeout` to 10000ms. In remote cloud environments (Supabase PostgreSQL pooler), executing sequential fixture setup (creating 4 orders spanning all lifecycle states with verified items and logs) routinely requires 12–15 seconds of round-trip network latency.
+- **Human Refactoring:**
+  Updated `vitest.config.ts` to include `hookTimeout: 30000` alongside `testTimeout: 30000`, and explicitly specified 30s timeouts on remote integration setup hooks.
+- **Commit / Phase:** Phase 4 (`test(sewing): T5 queue isolation, start assembly, and rbac`)
+
+---
+
+## Log Entry 8: Literal Query Status Hardcoding vs Dynamic Parameter Injection
+- **AI Tool / Task:** Implementing `listSewingQueue` in `sewing.service.ts`.
+- **Symptom / Potential Vulnerability:**
+  Standard AI pattern generation often delegates query filtering to incoming request parameters: `where: { status: params.status || 'VERIFIED' }`. An adversarial caller could pass `?status=PENDING_VERIFICATION` or `?status=CUTTING_IN_PROGRESS` to inspect unverified bundles on the sewing line.
+- **Root Cause:**
+  Failure of AI systems to comprehend the fundamental safety boundary: the Sewing Queue is legally prohibited from accessing or viewing unverified cut batches under any circumstances.
+- **Human Refactoring:**
+  Hardcoded `where: { status: 'VERIFIED' }` as an immutable literal in `prisma.cuttingOrder.findMany`. The sewing service ignores and rejects any attempted status override from request query strings. Validated this defense via integration test T5 with an array of malicious parameter payloads.
+- **Commit / Phase:** Phase 4 (`feat(sewing): isolated queue and start assembly`)
+

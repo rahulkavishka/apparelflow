@@ -7,6 +7,7 @@ export default defineConfig({
     globals: true,
     fileParallelism: false,
     testTimeout: 30000,
+    hookTimeout: 30000,
   },
   resolve: {
     alias: {

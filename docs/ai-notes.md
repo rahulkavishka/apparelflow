@@ -56,3 +56,29 @@ This running log captures real-time architectural scrutiny, AI code audits, dete
 - **Human Refactoring:**
   Refactored all schemas in `src/validators/order.schema.ts` to use `{ message: "..." }` and chained `.int()` / `.min()` rules, maintaining full type safety and eliminating TS compilation failures during production build.
 - **Commit / Phase:** Phase 2 (`feat(validation): strict zod schemas for orders`)
+
+---
+
+## Log Entry 5: AppError Constructor Argument Order Inversion & RangeError on HTTP Status
+- **AI Tool / Task:** Verification service hard stop and error envelope handling.
+- **Symptom / Error:**
+  `RangeError: init["status"] must be in the range of 200 to 599, inclusive` inside `NextResponse.json` at `toErrorResponse`.
+- **Root Cause:**
+  AI-generated code called `new AppError("Approval blocked: ...", 422, "GATE_SHORTAGE")` assuming standard `(message, statusCode, code)` signature, whereas the project's base `AppError` was defined with `constructor(public readonly statusCode: number, public readonly code: string, message: string, public readonly details?: unknown)`. This assigned the string message into `statusCode`, causing `NextResponse.json` to crash.
+- **Human Refactoring:**
+  1. Utilized the pre-existing specialized `GateError` class `constructor(code: "GATE_SHORTAGE" | "GATE_UNCOUNTED", message: string, details?: unknown)` which strictly locks the status code to `422`.
+  2. Added an explicit `BadRequestError` (400) subclass to `src/lib/errors.ts` to cleanly separate validation/malformed errors from generic internal errors.
+- **Commit / Phase:** Phase 3 (`feat(verification): approve reject services`)
+
+---
+
+## Log Entry 6: Session Interface Property Mismatch (`actor.userId` vs `actor.id`) Breaking Prisma Relation Lookups
+- **AI Tool / Task:** Verification decision persistence (`verification_logs`).
+- **Symptom / Error:**
+  Prisma Client threw `Argument 'order' is missing` when calling `tx.verificationLog.create({ data: { orderId, verifierId: undefined, ... } })`.
+- **Root Cause:**
+  AI code referenced `actor.userId` when attaching the verifier identity from the verified session context. However, the session's `Actor` interface was defined as `{ id: string, email: string, fullName: string, role: Role }`. Consequently, `verifierId` evaluated to `undefined`, which led Prisma to believe an unchecked create input was missing its relational `order` connector.
+- **Human Refactoring:**
+  Audited all service handlers to reference `actor.id` consistently, ensuring verified sessions directly populate the immutable audit log foreign keys without client payload leakage.
+- **Commit / Phase:** Phase 3 (`feat(verification): approve reject services`)
+

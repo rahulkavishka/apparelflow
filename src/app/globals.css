@@ -17,7 +17,7 @@
   --rule: #C9D0D7;
   --control-edge: #68757F;
   --ink-soft: #44515C;
-  --ink-faint: #98A2AB;
+  --ink-faint: #546370;
   --disabled-bg: #DFE4E8;
 
   /* status */
@@ -99,7 +99,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 input::placeholder,
 textarea::placeholder {
   color: var(--ink-faint);
-  opacity: 0.7;
+  opacity: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {

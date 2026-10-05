@@ -286,7 +286,6 @@ export function CreateOrderModal({
                 </tbody>
               </table>
             </div>
-
             {/* Fabric Figures */}
             <div className="rounded-xs border border-rule bg-paper p-3 space-y-2 text-xs">
               <div className="flex justify-between text-ink-soft">
@@ -297,7 +296,9 @@ export function CreateOrderModal({
               </div>
               <div className="flex justify-between text-ink-soft">
                 <span>Expected fabric:</span>
-                <span className="font-bold text-ink">{expFabric.toFixed(2)} yds</span>
+                <span className="font-bold text-ink">
+                  {activeRecipe && validQty > 0 ? `${expFabric.toFixed(2)} yds` : "—"}
+                </span>
               </div>
               <div className="flex justify-between text-ink-soft">
                 <span>Fabric wastage cap:</span>
@@ -310,15 +311,25 @@ export function CreateOrderModal({
                 <div className="text-right">
                   <span
                     className={`font-display text-lg font-bold tabular-nums ${
-                      isOverCap ? "text-excess-fg" : "text-ink"
+                      activeRecipe && validQty > 0 && validActualYds > 0
+                        ? isOverCap
+                          ? "text-excess-fg"
+                          : "text-ink"
+                        : "text-ink-soft"
                     }`}
                   >
-                    {wastage > 0 ? `+${wastage.toFixed(2)}%` : `${wastage.toFixed(2)}%`}
+                    {activeRecipe && validQty > 0 && validActualYds > 0
+                      ? wastage > 0
+                        ? `+${wastage.toFixed(2)}%`
+                        : `${wastage.toFixed(2)}%`
+                      : "—"}
                   </span>
                   <div className="text-[10px] text-ink-soft">
-                    {isOverCap && activeRecipe
-                      ? `Over cap by ${(wastage - activeRecipe.wastageCap).toFixed(1)} points (batch can proceed)`
-                      : "Within cap"}
+                    {activeRecipe && validQty > 0 && validActualYds > 0
+                      ? isOverCap
+                        ? `Over cap by ${(wastage - activeRecipe.wastageCap).toFixed(1)} points (batch can proceed)`
+                        : "Within cap"
+                      : "Enter quantity & fabric to preview"}
                   </div>
                 </div>
               </div>

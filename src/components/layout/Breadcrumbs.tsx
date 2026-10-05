@@ -21,10 +21,15 @@ export function Breadcrumbs() {
 
     const items: BreadcrumbItem[] = [];
 
+    const formatIdLabel = (rawId: string, fallback: string) => {
+      if (rawId.startsWith("CUT-")) return rawId;
+      return fallback;
+    };
+
     if (segments[0] === "supervisor") {
       items.push({ label: "Cutting orders", href: "/supervisor/orders" });
       if (segments[1] === "orders" && segments[2]) {
-        items.push({ label: segments[2] });
+        items.push({ label: formatIdLabel(segments[2], "Order details") });
       } else if (segments[1] === "recipes") {
         items.push({ label: "Recipes", href: "/supervisor/recipes" });
       }
@@ -35,14 +40,14 @@ export function Breadcrumbs() {
         items.push({ label: "Verification history", href: "/verifier/history" });
       } else if (segments[1] === "orders" && segments[2]) {
         items.push({ label: "Verification queue", href: "/verifier/queue" });
-        items.push({ label: `Terminal: ${segments[2]}` });
+        items.push({ label: formatIdLabel(segments[2], "Inspection terminal") });
       } else if (segments[1] === "recipes") {
         items.push({ label: "Recipes", href: "/verifier/recipes" });
       }
     } else if (segments[0] === "sewing") {
       items.push({ label: "Sewing queue", href: "/sewing/queue" });
       if (segments[1] === "orders" && segments[2]) {
-        items.push({ label: segments[2] });
+        items.push({ label: formatIdLabel(segments[2], "Batch traveler") });
       }
     }
 

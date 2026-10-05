@@ -111,7 +111,7 @@ export default function SewingOrderDetailPage({
               onClick={handleStartAssembly}
               className="bg-vat hover:bg-vat/90 text-paper font-semibold"
             >
-              {startSewingMutation.isPending ? "Starting..." : "Start Assembly →"}
+              {startSewingMutation.isPending ? "Starting..." : "Start Sewing Assembly"}
             </Button>
           )}
         </div>

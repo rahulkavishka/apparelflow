@@ -16,7 +16,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { evaluateTrafficLight, evaluateVerificationBatch } from "@/domain/traffic-light";
 import { toast } from "sonner";
 import { VerificationOrderDto } from "@/services/verification.service";
-import { Zap, ArrowLeft, Check, Lock, AlertTriangle, Save } from "lucide-react";
+import { ArrowLeft, Check, Lock, AlertTriangle, Save } from "lucide-react";
 
 export default function VerificationTerminalPage({
   params,
@@ -122,16 +122,6 @@ export default function VerificationTerminalPage({
         inputRefs.current[prevItem.componentId]?.select();
       }
     }
-  };
-
-  // Quick Match All Accelerator
-  const handleQuickMatchAll = () => {
-    const matched: Record<string, number | null> = {};
-    for (const item of items) {
-      matched[item.componentId] = item.expectedQty;
-    }
-    setCounts(matched);
-    toast.success("Populated all component counts with expected target quantities.");
   };
 
   const handleSaveCounts = async () => {
@@ -307,18 +297,6 @@ export default function VerificationTerminalPage({
                 Enter counts. Use <kbd className="font-mono text-[10px] bg-paper px-1 border border-rule">↵</kbd> or <kbd className="font-mono text-[10px] bg-paper px-1 border border-rule">↓</kbd> to cycle rows. Shortages (RED) block the release gate.
               </p>
             </div>
-
-            {/* Quick Match All Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleQuickMatchAll}
-              className="h-7 text-xs font-bold border-rule bg-paper hover:bg-sheet text-vat flex items-center gap-1 self-start sm:self-auto shrink-0"
-              title="Populate all items with expected quantities"
-            >
-              <Zap className="w-3 h-3 text-vat" />
-              <span>Fill expected all</span>
-            </Button>
           </div>
 
           {/* Desktop Table View */}
@@ -562,7 +540,7 @@ export default function VerificationTerminalPage({
                 ) : (
                   <Check className="w-3.5 h-3.5 shrink-0" />
                 )}
-                <span>{isApproving ? "Verifying..." : "Approve & release batch"}</span>
+                <span>{isApproving ? "Approving batch..." : "Approve Batch"}</span>
               </Button>
 
               {!canApprove && (

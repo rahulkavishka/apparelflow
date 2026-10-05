@@ -249,7 +249,7 @@ export async function getVerificationOrder(orderId: string): Promise<Verificatio
       createdBy: { select: { id: true, fullName: true } },
       items: {
         include: { component: true },
-        orderBy: { component: { componentName: "asc" } },
+        orderBy: { id: "asc" },
       },
     },
   });
@@ -278,7 +278,7 @@ export async function saveCounts(
       createdBy: { select: { id: true, fullName: true } },
       items: {
         include: { component: true },
-        orderBy: { component: { componentName: "asc" } },
+        orderBy: { id: "asc" },
       },
     },
   });
@@ -346,7 +346,7 @@ export async function approveVerificationOrder(
       createdBy: { select: { id: true, fullName: true } },
       items: {
         include: { component: true },
-        orderBy: { component: { componentName: "asc" } },
+        orderBy: { id: "asc" },
       },
     },
   });
@@ -490,7 +490,7 @@ export async function rejectVerificationOrder(
       recipe: true,
       items: {
         include: { component: true },
-        orderBy: { component: { componentName: "asc" } },
+        orderBy: { id: "asc" },
       },
     },
   });

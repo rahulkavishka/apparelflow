@@ -5,7 +5,7 @@ export async function listRecipes() {
   const recipes = await prisma.recipe.findMany({
     include: {
       components: {
-        orderBy: { componentName: "asc" },
+        orderBy: { id: "asc" },
       },
     },
     orderBy: { name: "asc" },
@@ -32,7 +32,7 @@ export async function getRecipeById(id: string) {
     where: { id },
     include: {
       components: {
-        orderBy: { componentName: "asc" },
+        orderBy: { id: "asc" },
       },
     },
   });

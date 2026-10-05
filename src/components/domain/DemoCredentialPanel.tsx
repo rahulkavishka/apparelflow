@@ -74,13 +74,13 @@ export function DemoCredentialPanel({
                   </span>
                 </div>
 
-                <p className="text-[11px] text-ink-soft leading-tight">
+                <p className="text-[11px] text-ink-soft leading-snug min-h-[32px] line-clamp-2">
                   {acc.description}
                 </p>
 
-                <div className="bg-sheet/60 p-1.5 rounded-xs border border-rule/80 text-[11px] font-mono space-y-0.5 text-ink-soft">
-                  <div className="truncate text-ink font-medium">{acc.email}</div>
-                  <div className="text-[10px] text-ink-soft">Pass: {acc.password}</div>
+                <div className="bg-sheet/80 p-2 rounded-xs border border-rule/80 text-xs font-mono space-y-0.5 text-ink-soft">
+                  <div className="truncate text-ink font-bold">{acc.email}</div>
+                  <div className="text-[11px] text-ink-soft font-semibold">Pass: {acc.password}</div>
                 </div>
               </div>
 

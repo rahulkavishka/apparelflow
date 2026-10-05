@@ -128,11 +128,11 @@ export function RecipeCombobox({
         </div>
       </button>
 
-      {/* Dropdown Popover */}
+      {/* Dropdown Popover with Crisp High-Contrast Elevation */}
       {isOpen && (
-        <div className="absolute left-0 right-0 sm:right-auto top-full mt-1 w-full sm:w-auto sm:min-w-[280px] max-w-[calc(100vw-32px)] bg-paper rounded-[4px] border border-rule shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-          {/* Search Box inside dropdown */}
-          <div className="p-2 border-b border-rule bg-sheet/40 flex items-center gap-2">
+        <div className="absolute left-0 right-0 sm:right-auto top-full mt-1.5 w-full sm:w-auto sm:min-w-[300px] max-w-[calc(100vw-32px)] bg-paper rounded-[6px] border border-ink/20 shadow-[0_16px_40px_rgba(15,23,42,0.24),_0_2px_8px_rgba(15,23,42,0.1)] ring-1 ring-black/10 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          {/* Search Box inside dropdown with distinct header styling */}
+          <div className="p-2.5 border-b border-rule bg-sheet flex items-center gap-2">
             <Search className="w-3.5 h-3.5 text-ink-soft shrink-0" />
             <input
               ref={inputRef}
@@ -140,26 +140,27 @@ export function RecipeCombobox({
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Filter by name, code or category..."
-              className="w-full bg-transparent text-xs text-ink placeholder:text-ink-faint outline-none border-none shadow-none focus:outline-none focus:ring-0"
+              className="w-full bg-transparent text-xs text-ink placeholder:text-ink-soft/70 outline-none border-none shadow-none focus:outline-none focus:ring-0 font-medium"
             />
             {searchTerm && (
               <button
                 type="button"
                 onClick={() => setSearchTerm("")}
-                className="text-ink-soft hover:text-ink p-0.5"
+                className="text-ink-soft hover:text-ink p-0.5 rounded cursor-pointer"
+                aria-label="Clear filter"
               >
-                <X className="w-3 h-3" />
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
 
-          {/* Scrollable list with max-height */}
-          <div className="max-h-60 overflow-y-auto p-1 divide-y divide-rule/40" role="listbox">
+          {/* Scrollable list with max-height and distinct separator */}
+          <div className="max-h-64 overflow-y-auto p-1.5 space-y-0.5 divide-y divide-rule/50 bg-paper" role="listbox">
             {allowAll && !searchTerm && (
               <button
                 type="button"
                 onClick={() => handleSelect("ALL")}
-                className={`w-full text-left px-2.5 py-2 rounded-[2px] text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
+                className={`w-full text-left px-2.5 py-2 rounded-[3px] text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
                   isAllSelected ? "bg-vat text-paper font-bold" : "text-ink hover:bg-sheet"
                 }`}
                 role="option"

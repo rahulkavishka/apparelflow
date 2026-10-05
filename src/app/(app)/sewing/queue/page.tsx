@@ -230,9 +230,10 @@ function SewingQueueContent() {
         </div>
       </div>
 
-      {/* Sewing Queue Table */}
+      {/* Sewing Queue Table (Desktop) & Responsive Cards (Mobile) */}
       <div className="border border-rule rounded-[2px] bg-paper overflow-hidden shadow-none">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead className="bg-sheet border-b border-rule">
               <tr>
@@ -337,6 +338,106 @@ function SewingQueueContent() {
           </table>
         </div>
 
+        {/* Mobile Card View (< md screens) */}
+        <div className="md:hidden divide-y divide-rule">
+          {isLoading ? (
+            <div className="p-6 text-center text-xs text-ink-soft">
+              Loading sewing queue...
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="p-6 text-center text-xs text-ink-soft">
+              {searchQuery || startedFilter !== "all"
+                ? "No verified batches match active filter."
+                : "No verified batches in queue."}
+            </div>
+          ) : (
+            orders.map((o) => {
+              const isInAssembly = Boolean(o.sewingStartedAt);
+
+              return (
+                <div
+                  key={o.id}
+                  className="p-3.5 space-y-2.5 bg-paper hover:bg-sheet/40 transition-colors"
+                >
+                  {/* Card Header: Order # + Assembly Stage */}
+                  <div className="flex items-center justify-between gap-2">
+                    <Link
+                      href={`/sewing/orders/${o.id}`}
+                      className="font-bold text-ink hover:underline text-sm"
+                    >
+                      <OrderNo orderNo={o.orderNo} />
+                    </Link>
+                    {isInAssembly ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-[2px] text-[11px] font-bold bg-vat text-paper">
+                        In assembly
+                      </span>
+                    ) : (
+                      <Stamp status={OrderStatus.VERIFIED} />
+                    )}
+                  </div>
+
+                  {/* Recipe & Roll */}
+                  <div className="flex items-center justify-between text-xs gap-2">
+                    <div className="font-bold text-ink truncate">
+                      {o.recipe.name}{" "}
+                      <span className="font-mono text-[11px] text-ink-soft">({o.recipe.recipeCode})</span>
+                    </div>
+                    <span className="font-mono text-[11px] bg-sheet px-1.5 py-0.5 rounded border border-rule shrink-0">
+                      Roll: {o.fabricRollId}
+                    </span>
+                  </div>
+
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-3 gap-2 bg-sheet/40 p-2 rounded border border-rule/60 text-center">
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-ink-soft">Batch Qty</div>
+                      <div className="font-display font-bold text-sm text-ink">{o.targetQty}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-ink-soft">Wastage</div>
+                      <div className="font-mono text-xs font-bold text-ink">
+                        {o.wastagePct !== null ? `${o.wastagePct.toFixed(1)}%` : "—"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-ink-soft">Verified At</div>
+                      <div className="text-[11px] text-ink-soft mt-0.5">
+                        <RelativeTime value={o.verifiedAt} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Verifier footer & Actions */}
+                  <div className="flex items-center justify-between pt-1 border-t border-rule/40 text-xs">
+                    <span className="text-ink-soft">
+                      Verified by <strong className="text-ink font-semibold">{o.verifier?.fullName || "Verifier"}</strong>
+                    </span>
+
+                    <div className="flex items-center gap-1.5">
+                      {!isInAssembly && (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={(e) => handleStartSewingQuick(e, o.id, o.orderNo)}
+                          className="h-7 text-xs px-2.5 font-bold flex items-center gap-1 bg-vat text-paper hover:bg-vat/90"
+                        >
+                          <Play className="w-3 h-3" />
+                          <span>Start</span>
+                        </Button>
+                      )}
+
+                      <Link href={`/sewing/orders/${o.id}`}>
+                        <Button variant="secondary" size="sm" className="h-7 text-xs px-2.5 font-bold">
+                          View details →
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
         {/* Integrated Pagination Bar */}
         <Pagination
           page={page}

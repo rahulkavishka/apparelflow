@@ -80,51 +80,53 @@ export function AuditStub({
           Component count breakdown
         </span>
 
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="text-ink-soft border-b border-rule">
-              <th className="pb-1 text-left font-bold">Component</th>
-              <th className="pb-1 text-right font-bold">Exp</th>
-              <th className="pb-1 text-right font-bold">Act</th>
-              <th className="pb-1 text-right font-bold">Var</th>
-              <th className="pb-1 text-right font-bold">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-rule/60">
-            {items.map((item) => (
-              <tr key={item.componentId} className="hover:bg-sheet">
-                <td className="py-1.5 text-ink font-medium">{item.name}</td>
-                <td className="py-1.5 text-right tabular-nums text-ink-soft">
-                  {item.expected}
-                </td>
-                <td className="py-1.5 text-right tabular-nums font-bold text-ink">
-                  {item.actual ?? "—"}
-                </td>
-                <td className="py-1.5 text-right tabular-nums font-bold text-ink">
-                  {item.variance !== null
-                    ? item.variance > 0
-                      ? `+${item.variance}`
-                      : item.variance
-                    : "—"}
-                </td>
-                <td className="py-1.5 text-right">
-                  <Lamp
-                    status={
-                      item.status === "MATCH"
-                        ? "GREEN"
-                        : item.status === "EXCESS"
-                        ? "YELLOW"
-                        : item.status === "SHORT"
-                        ? "RED"
-                        : null
-                    }
-                    variance={item.variance ?? undefined}
-                  />
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="text-ink-soft border-b border-rule">
+                <th className="pb-1 text-left font-bold">Component</th>
+                <th className="pb-1 text-right font-bold">Exp</th>
+                <th className="pb-1 text-right font-bold">Act</th>
+                <th className="pb-1 text-right font-bold">Var</th>
+                <th className="pb-1 text-right font-bold">Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-rule/60">
+              {items.map((item) => (
+                <tr key={item.componentId} className="hover:bg-sheet">
+                  <td className="py-1.5 text-ink font-medium whitespace-nowrap">{item.name}</td>
+                  <td className="py-1.5 text-right tabular-nums text-ink-soft">
+                    {item.expected}
+                  </td>
+                  <td className="py-1.5 text-right tabular-nums font-bold text-ink">
+                    {item.actual ?? "—"}
+                  </td>
+                  <td className="py-1.5 text-right tabular-nums font-bold text-ink">
+                    {item.variance !== null
+                      ? item.variance > 0
+                        ? `+${item.variance}`
+                        : item.variance
+                      : "—"}
+                  </td>
+                  <td className="py-1.5 text-right">
+                    <Lamp
+                      status={
+                        item.status === "MATCH"
+                          ? "GREEN"
+                          : item.status === "EXCESS"
+                          ? "YELLOW"
+                          : item.status === "SHORT"
+                          ? "RED"
+                          : null
+                      }
+                      variance={item.variance ?? undefined}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

@@ -106,3 +106,36 @@ This running log captures real-time architectural scrutiny, AI code audits, dete
   Hardcoded `where: { status: 'VERIFIED' }` as an immutable literal in `prisma.cuttingOrder.findMany`. The sewing service ignores and rejects any attempted status override from request query strings. Validated this defense via integration test T5 with an array of malicious parameter payloads.
 - **Commit / Phase:** Phase 4 (`feat(sewing): isolated queue and start assembly`)
 
+---
+
+## Log Entry 9: Client-Side Paginated Count Slicing Inconsistency in Verification History & Queue
+- **AI Tool / Task:** Verification decision history table and KPI chip badge counts.
+- **Symptom / Error:** 
+  The Verification History page displayed `Recorded Decisions: 55`, but the filter chips showed `Approved: 6` and `Rejected: 4` ($6 + 4 = 10 \neq 55$), causing visible data inconsistency across tabs.
+- **Root Cause:**
+  The AI scaffold computed filter counts on the frontend via `logs.filter(l => l.decision === 'APPROVED').length`. Because the query was paginated (`pageSize: 10`), it only counted the 10 rows on the active page instead of aggregating the true database totals across all pages.
+- **Human Refactoring:**
+  1. Updated `listVerificationHistory` in `verification.service.ts` to perform `prisma.verificationLog.groupBy({ by: ['decision'], where: baseWhere })` to compute global counts for `ALL`, `APPROVED`, and `REJECTED`.
+  2. Updated `listVerificationQueue` to run `prisma.cuttingOrder.aggregate({ where, _sum: { targetQty: true } })` for true queue garment totals.
+  3. Bound frontend `FilterChips` badges and KPI cards directly to `meta.counts` and `meta.totalGarments`.
+- **Commit / Phase:** Phase 5 (`fix(verifier): accurate dataset-wide count aggregation for history and queue`)
+
+---
+
+## Log Entry 10: Multi-Round-Trip Latency Overhead & Zero-DB Cryptographic Auth Optimization
+- **AI Tool / Task:** Backend API route performance and database round-trip latency optimization.
+- **Symptom / Error:**
+  CRUD operations over remote cloud database connection exhibited 2s–6s latency, primarily driven by sequential database queries per request.
+- **Root Cause:**
+  1. `withAuth` executed `prisma.user.findUnique` on every single request to look up user roles.
+  2. Mutations like `saveCounts` and `submitCuttingOrder` performed deep multi-table re-fetches after updating.
+  3. Interactive transactions required multi-round-trip handshakes (`BEGIN`, `INSERT`, `UPDATE`, `COMMIT`).
+  4. Concurrent background polling intervals (`refetchInterval: 15_000`) congested the HTTP connection pipeline.
+- **Human Refactoring:**
+  1. **Zero-DB Auth:** Embedded user claims (`id`, `email`, `fullName`, `role`) into the cryptographically signed JWT payload, enabling `getSession` to authenticate requests in **0.01ms in-memory** with zero database round-trips.
+  2. **Pipelined Batch Transactions:** Converted multi-step mutation transactions in `approveVerificationOrder` and `rejectVerificationOrder` to `prisma.$transaction([ ... ])` arrays, cutting 4 network round-trips down to 1.
+  3. **Direct Return:** Formatted mutation results directly from updated state without re-querying deep relation trees (`submitOrder` dropped from 4,505ms to 1,009ms in tests).
+  4. **Polling Eradication & Cache Tuning:** Removed aggressive background `refetchInterval` timers and increased default TanStack Query `staleTime` to 30s.
+- **Commit / Phase:** Phase 5 (`feat(db): moved db to mumbai region & crud operation optimizations`)
+
+

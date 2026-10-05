@@ -34,7 +34,7 @@ export function SelectionBar({
 
   return (
     <div
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-ink text-paper rounded-[4px] px-4 py-2.5 shadow-2xl flex items-center gap-4 border border-paper/10 text-xs font-bold animate-in fade-in slide-in-from-bottom-3 duration-150 select-none ${className}`}
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-ink text-paper rounded-[4px] px-3 sm:px-4 py-2 sm:py-2.5 shadow-2xl flex items-center justify-between sm:justify-start gap-2.5 sm:gap-4 border border-paper/10 text-xs font-bold animate-in fade-in slide-in-from-bottom-3 duration-150 select-none max-w-[95vw] overflow-x-auto ${className}`}
     >
       <div className="flex items-center gap-2">
         <span className="bg-vat px-2 py-0.5 rounded-[2px] font-mono font-bold text-paper">

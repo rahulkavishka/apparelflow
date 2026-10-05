@@ -131,9 +131,10 @@ export default function VerifierQueuePage() {
         </div>
       </div>
 
-      {/* Queue Table */}
+      {/* Queue Table (Desktop) & Responsive Cards (Mobile) */}
       <div className="border border-rule rounded-[2px] bg-paper overflow-hidden shadow-none">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead className="bg-sheet border-b border-rule">
               <tr>
@@ -233,6 +234,99 @@ export default function VerifierQueuePage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View (< md screens) */}
+        <div className="md:hidden divide-y divide-rule">
+          {isLoading ? (
+            <div className="p-6 text-center text-xs text-ink-soft">
+              Loading verification queue...
+            </div>
+          ) : queue.length === 0 ? (
+            <div className="p-6 text-center text-xs text-ink-soft">
+              {searchQuery
+                ? "No queue items match your search filter."
+                : "No batches waiting for verification. All cutting orders are clear."}
+            </div>
+          ) : (
+            queue.map((item) => {
+              const isCountingStarted = item.countedItems > 0;
+              const isFullyCounted = item.countedItems === item.totalItems && item.totalItems > 0;
+
+              return (
+                <div
+                  key={item.id}
+                  className="p-3.5 space-y-2.5 bg-paper hover:bg-sheet/40 transition-colors"
+                >
+                  {/* Card Header: Order # + Gate Stamp */}
+                  <div className="flex items-center justify-between gap-2">
+                    <Link
+                      href={`/verifier/orders/${item.id}`}
+                      className="font-bold text-ink hover:underline text-sm"
+                    >
+                      <OrderNo orderNo={item.orderNo} />
+                    </Link>
+                    <Stamp status={item.status} />
+                  </div>
+
+                  {/* Recipe and Roll details */}
+                  <div className="flex items-center justify-between text-xs gap-2">
+                    <div className="font-bold text-ink truncate">
+                      {item.recipe.name}{" "}
+                      <span className="font-mono text-[11px] text-ink-soft">({item.recipe.recipeCode})</span>
+                    </div>
+                    <span className="font-mono text-[11px] bg-sheet px-1.5 py-0.5 rounded border border-rule shrink-0">
+                      Roll: {item.fabricRollId}
+                    </span>
+                  </div>
+
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-2 gap-2 bg-sheet/40 p-2 rounded border border-rule/60 text-center">
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-ink-soft">Target Quantity</div>
+                      <div className="font-display font-bold text-sm text-ink">{item.targetQty} pcs</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-ink-soft">Waiting Since</div>
+                      <div className="text-xs font-medium text-ink-soft mt-0.5">
+                        <RelativeTime value={item.submittedAt} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Counting Progress Badge */}
+                  <div className="flex items-center justify-between text-xs pt-1">
+                    <span className="text-ink-soft font-medium">Piece Audit:</span>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-[2px] font-mono font-bold text-[11px] ${
+                        isFullyCounted
+                          ? "bg-match-bg text-match-fg border border-match-edge/60"
+                          : isCountingStarted
+                          ? "bg-vat-tint/40 text-vat border border-vat/30"
+                          : "bg-sheet text-ink-soft border border-rule"
+                      }`}
+                    >
+                      {item.countedItems} / {item.totalItems} counted
+                    </span>
+                  </div>
+
+                  {/* Card Action */}
+                  <div className="pt-1.5 border-t border-rule/40">
+                    <Link href={`/verifier/orders/${item.id}`} className="block w-full">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="w-full h-8 text-xs font-bold flex items-center justify-center gap-1.5 bg-vat text-paper hover:bg-vat/90 cursor-pointer"
+                      >
+                        <span>Open verification terminal</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
 
         {/* Integrated Pagination Bar - Default 10 */}

@@ -219,7 +219,8 @@ export default function SewingOrderDetailPage({
           </span>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-left text-sm border-collapse">
             <thead className="bg-sheet/50 border-b border-rule">
               <tr>
@@ -265,6 +266,55 @@ export default function SewingOrderDetailPage({
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Component Cards (< sm screens) */}
+        <div className="sm:hidden divide-y divide-rule">
+          {order.items.map((item) => (
+            <div key={item.componentId} className="p-3.5 space-y-2 bg-paper">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-bold text-ink text-sm">{item.name}</span>
+                <Lamp
+                  status={
+                    item.status === "MATCH"
+                      ? "GREEN"
+                      : item.status === "EXCESS"
+                      ? "YELLOW"
+                      : item.status === "SHORT"
+                      ? "RED"
+                      : null
+                  }
+                  variance={item.variance ?? undefined}
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2 bg-sheet/40 p-2 rounded border border-rule/60 text-center text-xs">
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-ink-soft">Expected</div>
+                  <div className="font-display font-bold text-ink text-sm">{item.expected}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-ink-soft">Counted</div>
+                  <div className="font-display font-bold text-ink text-sm">{item.actual ?? "—"}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-ink-soft">Variance</div>
+                  <div className="font-display font-bold text-sm">
+                    {item.variance !== null ? (
+                      item.variance > 0 ? (
+                        <span className="text-excess-fg font-bold">+{item.variance}</span>
+                      ) : item.variance < 0 ? (
+                        <span className="text-short-fg font-bold">{item.variance}</span>
+                      ) : (
+                        <span className="text-match-fg font-bold">0</span>
+                      )
+                    ) : (
+                      "0"
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

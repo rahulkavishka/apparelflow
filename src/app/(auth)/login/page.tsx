@@ -74,7 +74,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-chalk flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 select-none">
       <div className="w-full max-w-4xl flex flex-col items-center space-y-6">
         {/* Brand Header: Logo without background + ApparelFlow Name */}
-        <div className="flex flex-col items-center text-center space-y-2">
+        <div className="flex flex-col items-center text-center space-y-2 mt-10">
           <Image
             src="/logo.png"
             alt="ApparelFlow Logo"

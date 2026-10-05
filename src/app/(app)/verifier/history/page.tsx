@@ -147,9 +147,10 @@ export default function VerifierHistoryPage() {
         </div>
       </div>
 
-      {/* History Data Table */}
+      {/* History Data Table (Desktop) & Responsive Cards (Mobile) */}
       <div className="border border-rule rounded-[2px] bg-paper overflow-hidden shadow-none">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead className="bg-sheet border-b border-rule">
               <tr>
@@ -240,6 +241,103 @@ export default function VerifierHistoryPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View (< md screens) */}
+        <div className="md:hidden divide-y divide-rule">
+          {isLoading ? (
+            <div className="p-6 text-center text-xs text-ink-soft">
+              Loading verification history...
+            </div>
+          ) : logs.length === 0 ? (
+            <div className="p-6 text-center text-xs text-ink-soft">
+              {searchQuery || decisionFilter !== "ALL"
+                ? "No verification logs match the active filter."
+                : "No verification decisions recorded yet."}
+            </div>
+          ) : (
+            logs.map((log: any) => {
+              const isApproved = log.decision === "APPROVED";
+
+              return (
+                <div
+                  key={log.id}
+                  onClick={() => setSelectedSnapshotLog(log)}
+                  className={`p-3.5 space-y-2.5 transition-colors cursor-pointer ${
+                    isApproved ? "bg-paper hover:bg-sheet/40" : "bg-short-bg/15 border-l-4 border-l-short-edge"
+                  }`}
+                >
+                  {/* Card Header: Order # + Decision Badge */}
+                  <div className="flex items-center justify-between gap-2">
+                    <OrderNo orderNo={log.orderNo} />
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-[2px] font-bold text-[11px] ${
+                        isApproved
+                          ? "bg-match-bg text-match-fg border border-match-edge/60"
+                          : "bg-short-bg text-short-fg border border-short-edge/60"
+                      }`}
+                    >
+                      {isApproved ? "Approved" : "Rejected"}
+                    </span>
+                  </div>
+
+                  {/* Recipe & Roll */}
+                  <div className="flex items-center justify-between text-xs gap-2">
+                    <div className="font-bold text-ink truncate">
+                      {log.recipe.name}{" "}
+                      <span className="font-mono text-[11px] text-ink-soft">({log.recipe.recipeCode})</span>
+                    </div>
+                    <span className="font-mono text-[11px] bg-sheet px-1.5 py-0.5 rounded border border-rule shrink-0">
+                      Roll: {log.fabricRollId}
+                    </span>
+                  </div>
+
+                  {/* Metadata Grid */}
+                  <div className="grid grid-cols-3 gap-2 bg-sheet/40 p-2 rounded border border-rule/60 text-center">
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-ink-soft">Batch Qty</div>
+                      <div className="font-display font-bold text-sm text-ink">{log.targetQty}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-ink-soft">Verified By</div>
+                      <div className="text-xs font-bold text-ink truncate px-1">{log.verifier?.fullName || "—"}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-ink-soft">Time</div>
+                      <div className="text-[11px] text-ink-soft mt-0.5">
+                        <RelativeTime value={log.timestamp} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Rejection Note */}
+                  {!isApproved && log.rejectionNote && (
+                    <div className="text-xs p-2 rounded bg-short-bg border border-short-edge/40 text-short-fg">
+                      <strong className="font-bold">Reason: </strong>
+                      {log.rejectionNote}
+                    </div>
+                  )}
+
+                  {/* Card Action */}
+                  <div className="flex items-center justify-between pt-1 border-t border-rule/40">
+                    <span className="text-xs text-ink-soft">Snapshot stub</span>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedSnapshotLog(log);
+                      }}
+                      className="h-7 text-xs px-2.5 font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <Eye className="w-3 h-3" />
+                      <span>Inspect stub</span>
+                    </Button>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
 
         {/* Integrated Pagination Bar */}

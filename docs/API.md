@@ -267,6 +267,50 @@
 #### 11. `GET /api/verification/queue`
 - **Auth:** `cutting_verifier`
 - **Description:** Returns all batches currently in `PENDING_VERIFICATION` status awaiting component counts.
+- **Query Params:** `q` (search order #, roll ID, recipe), `sort`, `dir`, `page`, `pageSize`.
+- **Response `200`:**
+  ```json
+  {
+    "data": {
+      "queue": [ ... ],
+      "total": 12,
+      "meta": {
+        "page": 1,
+        "pageSize": 10,
+        "total": 12,
+        "totalPages": 2,
+        "totalGarments": 600
+      }
+    }
+  }
+  ```
+
+---
+
+#### 11b. `GET /api/verification/logs`
+- **Auth:** `cutting_verifier`
+- **Description:** Returns the immutable audit trail of past verification decisions (approvals and rejections) with dataset-wide decision count aggregations.
+- **Query Params:** `q`, `decision` (`ALL` | `APPROVED` | `REJECTED`), `from`, `to`, `page`, `pageSize`.
+- **Response `200`:**
+  ```json
+  {
+    "data": {
+      "logs": [ ... ],
+      "total": 55,
+      "meta": {
+        "page": 1,
+        "pageSize": 10,
+        "total": 55,
+        "totalPages": 6,
+        "counts": {
+          "ALL": 55,
+          "APPROVED": 35,
+          "REJECTED": 20
+        }
+      }
+    }
+  }
+  ```
 
 ---
 

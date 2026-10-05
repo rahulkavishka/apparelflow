@@ -248,7 +248,7 @@ npm start
 The repository includes a comprehensive unit and integration test suite executing against a real PostgreSQL instance:
 
 ```bash
-# Run full automated test suite (54 tests)
+# Run full automated test suite (65 tests across 7 suites)
 npm test
 ```
 
@@ -280,8 +280,8 @@ npm run test:security
 - **D-06 (Rejection Note Contract):** Rejection notes are required and must be between 5 and 500 characters.
 - **D-07 (Role Isolation):** Each user has exactly one assigned role. No user can verify their own cutting order.
 - **D-08 (Zero-Tolerance Contrast):** Light-only theme with pure paper surfaces (`#FFFFFF`) and dark ink (`#19242F`). Dark mode is completely eradicated.
-- **D-09 (Defensive Inputs):** Custom `IntegerInput` component intercepts non-digit keystrokes and cleanses clipboard pastes.
-- **D-10 (Fresh DB Role Validation):** JWT token claims are not trusted for authorization; user role and active status are verified against the database on each request.
+- **D-09 (Defensive Inputs):** Custom `IntegerInput` and `DecimalInput` components intercept non-digit keystrokes and cleanse clipboard pastes.
+- **D-10 (Zero-DB Cryptographic Auth & Dataset Aggregations):** Signed JWT tokens seal verified user claims in-memory for 0ms auth latency; filter tabs and KPI summaries utilize dataset-wide database aggregations (`groupBy` & `aggregate`) rather than paginated page slices.
 - **D-11 (Immutable SQL Filter):** The Sewing Queue SQL query hardcodes `where: { status: 'VERIFIED' }` at the database level.
 - **D-12 (PostgREST Sealing):** All database tables have Row-Level Security (RLS) enabled with deny-all policies.
 - **D-13 (Sequence Order Numbers):** Human-readable auto-incrementing order numbers follow `CUT-000001` format.

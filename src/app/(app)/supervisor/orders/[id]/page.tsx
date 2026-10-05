@@ -432,7 +432,8 @@ export default function SupervisorOrderDetailPage({
               </span>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Desktop Table View */}
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-left text-sm border-collapse">
                 <thead className="bg-sheet/50 border-b border-rule">
                   <tr>
@@ -465,6 +466,34 @@ export default function SupervisorOrderDetailPage({
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Component Cards (< sm screens) */}
+            <div className="sm:hidden divide-y divide-rule">
+              {(order.items as OrderItem[] | undefined)?.map((item) => (
+                <div key={item.id} className="p-3.5 space-y-2 bg-paper">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-ink text-sm">{item.componentName}</span>
+                    <Lamp status={item.status} variance={item.variance ?? undefined} />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 bg-sheet/40 p-2 rounded border border-rule/60 text-center text-xs">
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-ink-soft">Multiplier</div>
+                      <div className="font-mono font-bold text-ink">{item.piecesPerGarment}×</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-ink-soft">Expected</div>
+                      <div className="font-display font-bold text-ink text-sm">{item.expectedQty}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-ink-soft">Counted</div>
+                      <div className="font-display font-bold text-ink text-sm">
+                        {item.actualQty !== null ? item.actualQty : "—"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 

@@ -100,9 +100,10 @@ export default function RecipesPage() {
         </div>
       </div>
 
-      {/* Recipes Table */}
+      {/* Recipes Table (Desktop) & Responsive Cards (Mobile) */}
       <div className="border border-rule rounded-[2px] bg-paper overflow-hidden shadow-none">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead className="bg-sheet border-b border-rule">
               <tr>
@@ -174,6 +175,73 @@ export default function RecipesPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View (< md screens) */}
+        <div className="md:hidden divide-y divide-rule">
+          {isLoading ? (
+            <div className="p-6 text-center text-xs text-ink-soft">
+              Loading recipe specifications...
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="p-6 text-center text-xs text-ink-soft">
+              No recipes found matching &quot;{search}&quot;.
+            </div>
+          ) : (
+            filtered.map((r) => (
+              <div
+                key={r.id}
+                onClick={() => setSelectedRecipe(r)}
+                className="p-3.5 space-y-2.5 bg-paper hover:bg-sheet/40 transition-colors cursor-pointer"
+              >
+                {/* Header: Code + Category */}
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono font-bold text-xs bg-vat-tint/30 text-vat border border-vat/30 px-2 py-0.5 rounded">
+                    {r.recipeCode}
+                  </span>
+                  <span className="text-xs text-ink-soft bg-sheet px-2 py-0.5 rounded border border-rule">
+                    {r.category}
+                  </span>
+                </div>
+
+                {/* Style Name */}
+                <div className="font-bold text-sm text-ink">{r.name}</div>
+
+                {/* Specs 3-Grid */}
+                <div className="grid grid-cols-3 gap-2 bg-sheet/40 p-2 rounded border border-rule/60 text-center">
+                  <div>
+                    <div className="text-[10px] uppercase font-bold text-ink-soft">Std Fabric</div>
+                    <div className="font-mono text-xs font-bold text-ink">{r.stdFabricYards.toFixed(2)} yds</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase font-bold text-ink-soft">Wastage Cap</div>
+                    <div className="font-mono text-xs font-bold text-ink">{r.wastageCap.toFixed(1)}%</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase font-bold text-ink-soft">Cut Parts</div>
+                    <div className="font-display text-xs font-bold text-ink">{r.components.length} parts</div>
+                  </div>
+                </div>
+
+                {/* Action button */}
+                <div className="flex items-center justify-between pt-1 border-t border-rule/40">
+                  <span className="text-xs text-ink-soft">Tap to view full spec</span>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedRecipe(r);
+                    }}
+                    className="h-7 text-xs px-2.5 font-bold flex items-center gap-1"
+                  >
+                    <Eye className="w-3 h-3 text-ink-soft" />
+                    <span>Inspect parts</span>
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

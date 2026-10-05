@@ -421,9 +421,10 @@ function SupervisorOrdersContent() {
         </div>
       </div>
 
-      {/* High-Density Data Table */}
+      {/* High-Density Data Table (Desktop) & Responsive Cards (Mobile) */}
       <div className="rounded-[4px] border border-rule bg-paper overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead className="bg-sheet border-b border-rule select-none">
               <tr>
@@ -603,6 +604,174 @@ function SupervisorOrdersContent() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View (< md screens) */}
+        <div className="md:hidden divide-y divide-rule">
+          {isLoading ? (
+            <div className="p-6 text-center text-xs text-ink-soft">
+              Loading cutting orders...
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="p-6 text-center text-xs text-ink-soft">
+              {searchQuery || selectedStatus !== "ALL" || selectedRecipeId !== "ALL"
+                ? "No cutting orders matching active filters."
+                : "No cutting orders found."}
+            </div>
+          ) : (
+            orders.map((o) => {
+              const isSelected = selectedIds.has(o.id);
+              const isRejected = o.status === OrderStatus.REJECTED;
+
+              return (
+                <div
+                  key={o.id}
+                  onClick={() =>
+                    setPeekData({
+                      id: o.id,
+                      orderNo: o.orderNo,
+                      status: o.status,
+                      targetQty: o.targetQty,
+                      fabricRollId: o.fabricRollId,
+                      actualFabricYds: o.actualFabricYds,
+                      expectedFabricYds: o.expectedFabricYds,
+                      wastagePct: o.wastagePct,
+                      recipeName: o.recipe.name,
+                      recipeCode: o.recipe.recipeCode,
+                      wastageCap: o.recipe.wastageCap,
+                      createdAt: o.createdAt,
+                      submittedAt: o.submittedAt,
+                      verifiedAt: o.verifiedAt,
+                      lastRejectionReason: o.lastRejectionReason,
+                      primaryActionHref: `/supervisor/orders/${o.id}`,
+                      primaryActionLabel:
+                        o.status === OrderStatus.CUTTING_IN_PROGRESS
+                          ? "Edit draft order"
+                          : "View full order",
+                    })
+                  }
+                  className={`p-3.5 space-y-2.5 transition-colors cursor-pointer ${
+                    isSelected ? "bg-vat-tint/30" : "bg-paper hover:bg-sheet/40"
+                  } ${isRejected ? "border-l-4 border-l-short-edge bg-short-bg/15" : ""}`}
+                >
+                  {/* Card Header: Selection Checkbox + Order # + Status Stamp */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => handleToggleSelectRow(o.id, e as any)}
+                          aria-label={`Select order ${o.orderNo}`}
+                          className="w-4 h-4 rounded-[2px] border-rule text-vat cursor-pointer"
+                        />
+                      </div>
+                      <Link
+                        href={`/supervisor/orders/${o.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="font-bold text-ink hover:underline text-sm"
+                      >
+                        <OrderNo orderNo={o.orderNo} />
+                      </Link>
+                    </div>
+                    <Stamp status={o.status} />
+                  </div>
+
+                  {/* Recipe & Roll Metadata */}
+                  <div className="flex items-center justify-between text-xs gap-2">
+                    <div className="font-bold text-ink truncate">
+                      {o.recipe.name}{" "}
+                      <span className="font-mono text-[11px] text-ink-soft">({o.recipe.recipeCode})</span>
+                    </div>
+                    <span className="font-mono text-[11px] bg-sheet px-1.5 py-0.5 rounded border border-rule shrink-0">
+                      Roll: {o.fabricRollId}
+                    </span>
+                  </div>
+
+                  {/* Metrics 3-Grid */}
+                  <div className="grid grid-cols-3 gap-2 bg-sheet/40 p-2 rounded border border-rule/60 text-center">
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-ink-soft">Target Qty</div>
+                      <div className="font-display font-bold text-sm text-ink">{o.targetQty}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-ink-soft">Fabric</div>
+                      <div className="font-mono text-xs font-bold text-ink">{o.actualFabricYds.toFixed(1)} yds</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-ink-soft">Wastage</div>
+                      <div
+                        className={`font-mono text-xs font-bold ${
+                          o.wastagePct > o.recipe.wastageCap ? "text-excess-fg" : "text-ink"
+                        }`}
+                      >
+                        {o.wastagePct.toFixed(1)}%
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Rejection Alert Box */}
+                  {isRejected && o.lastRejectionReason && (
+                    <div className="text-xs p-2 rounded bg-short-bg border border-short-edge/40 text-short-fg">
+                      <strong className="font-bold">Rejection Note: </strong>
+                      {o.lastRejectionReason}
+                    </div>
+                  )}
+
+                  {/* Bottom Actions */}
+                  <div
+                    className="flex items-center justify-between pt-1 border-t border-rule/40"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Link
+                      href={`/supervisor/orders/${o.id}`}
+                      className="text-xs font-bold text-vat hover:underline"
+                    >
+                      {o.status === OrderStatus.CUTTING_IN_PROGRESS ? "Edit batch →" : "View batch →"}
+                    </Link>
+
+                    <div className="flex items-center gap-1.5">
+                      {o.status === OrderStatus.CUTTING_IN_PROGRESS && (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={(e) => handleSubmitSingle(e, o.id, o.orderNo)}
+                          disabled={submitOrderMutation.isPending}
+                          className="h-7 px-2.5 text-xs font-bold bg-vat text-paper hover:bg-vat/90"
+                        >
+                          Send to gate
+                        </Button>
+                      )}
+
+                      {o.status === OrderStatus.REJECTED && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={(e) => handleRecutSingle(e, o.id, o.orderNo)}
+                          disabled={recutOrderMutation.isPending}
+                          className="h-7 px-2.5 text-xs font-bold border-short-edge text-short-fg hover:bg-short-bg"
+                        >
+                          Re-cut batch
+                        </Button>
+                      )}
+
+                      {o.status === OrderStatus.PENDING_VERIFICATION && (
+                        <span className="text-xs text-ink-soft italic">
+                          In verifier queue
+                        </span>
+                      )}
+
+                      {o.status === OrderStatus.VERIFIED && (
+                        <span className="text-xs text-match-fg font-bold">
+                          ✓ Released
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
 
         {/* Pagination Bar - Default 10 rows */}

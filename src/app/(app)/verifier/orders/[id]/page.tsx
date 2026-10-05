@@ -321,105 +321,197 @@ export default function VerificationTerminalPage({
             </Button>
           </div>
 
-          <table className="w-full text-left text-xs border-collapse">
-            <thead className="bg-sheet border-b border-rule">
-              <tr>
-                <th className="p-2.5 pl-3.5 font-bold text-ink-soft">Component</th>
-                <th className="p-2.5 text-right font-bold text-ink-soft">Per</th>
-                <th className="p-2.5 text-right font-bold text-ink-soft">Expected</th>
-                <th className="p-2.5 text-right font-bold text-ink-soft w-32">
-                  Actual count
-                </th>
-                <th className="p-2.5 text-right font-bold text-ink-soft">Variance</th>
-                <th className="p-2.5 pr-3.5 font-bold text-ink-soft">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-rule">
-              {items.map((item, index) => {
-                const currentActual = counts[item.componentId];
-                const liveLight = evaluateTrafficLight(currentActual, item.expectedQty);
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead className="bg-sheet border-b border-rule">
+                <tr>
+                  <th className="p-2.5 pl-3.5 font-bold text-ink-soft">Component</th>
+                  <th className="p-2.5 text-right font-bold text-ink-soft">Per</th>
+                  <th className="p-2.5 text-right font-bold text-ink-soft">Expected</th>
+                  <th className="p-2.5 text-right font-bold text-ink-soft w-32">
+                    Actual count
+                  </th>
+                  <th className="p-2.5 text-right font-bold text-ink-soft">Variance</th>
+                  <th className="p-2.5 pr-3.5 font-bold text-ink-soft">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-rule">
+                {items.map((item, index) => {
+                  const currentActual = counts[item.componentId];
+                  const liveLight = evaluateTrafficLight(currentActual, item.expectedQty);
 
-                return (
-                  <tr
-                    key={item.componentId}
-                    className="hover:bg-row-hover transition-colors h-14"
-                  >
-                    {/* Component Name & Thumbnail */}
-                    <td className="p-2.5 pl-3.5">
-                      <div className="flex items-center gap-2.5">
-                        {item.imageUrl && (
-                          <div className="relative w-8 h-8 shrink-0 bg-sheet rounded-[2px] border border-rule flex items-center justify-center p-0.5">
-                            <Image
-                              src={item.imageUrl}
-                              alt={item.name}
-                              width={24}
-                              height={24}
-                              className="object-contain"
-                            />
-                          </div>
-                        )}
-                        <span className="font-bold text-ink block leading-tight">
-                          {item.name}
-                        </span>
-                      </div>
-                    </td>
+                  return (
+                    <tr
+                      key={item.componentId}
+                      className="hover:bg-row-hover transition-colors h-14"
+                    >
+                      {/* Component Name & Thumbnail */}
+                      <td className="p-2.5 pl-3.5">
+                        <div className="flex items-center gap-2.5">
+                          {item.imageUrl && (
+                            <div className="relative w-8 h-8 shrink-0 bg-sheet rounded-[2px] border border-rule flex items-center justify-center p-0.5">
+                              <Image
+                                src={item.imageUrl}
+                                alt={item.name}
+                                width={24}
+                                height={24}
+                                className="object-contain"
+                              />
+                            </div>
+                          )}
+                          <span className="font-bold text-ink block leading-tight">
+                            {item.name}
+                          </span>
+                        </div>
+                      </td>
 
-                    {/* Pieces Per Garment */}
-                    <td className="p-2.5 text-right tabular-nums text-ink-soft">
-                      {item.piecesPerGarment}
-                    </td>
+                      {/* Pieces Per Garment */}
+                      <td className="p-2.5 text-right tabular-nums text-ink-soft">
+                        {item.piecesPerGarment}
+                      </td>
 
-                    {/* Expected Quantity */}
-                    <td className="p-2.5 text-right font-display text-base font-bold tabular-nums text-ink">
-                      {item.expectedQty}
-                    </td>
+                      {/* Expected Quantity */}
+                      <td className="p-2.5 text-right font-display text-base font-bold tabular-nums text-ink">
+                        {item.expectedQty}
+                      </td>
 
-                    {/* Count Input with auto-advance */}
-                    <td className="p-2.5 text-right">
-                      <div
-                        onKeyDown={(e) => handleKeyDownOnInput(e, index)}
-                      >
-                        <IntegerInput
-                          ref={(el) => {
-                            inputRefs.current[item.componentId] = el;
-                          }}
-                          value={currentActual}
-                          onChange={(val) => handleCountChange(item.componentId, val)}
-                          disabled={isSaving || isApproving}
-                          placeholder={String(item.expectedQty)}
-                          aria-label={`Count for ${item.name}`}
-                          className="h-10 text-right font-display text-base font-bold tabular-nums"
-                        />
-                      </div>
-                    </td>
+                      {/* Count Input with auto-advance */}
+                      <td className="p-2.5 text-right">
+                        <div
+                          onKeyDown={(e) => handleKeyDownOnInput(e, index)}
+                        >
+                          <IntegerInput
+                            ref={(el) => {
+                              inputRefs.current[item.componentId] = el;
+                            }}
+                            value={currentActual}
+                            onChange={(val) => handleCountChange(item.componentId, val)}
+                            disabled={isSaving || isApproving}
+                            placeholder={String(item.expectedQty)}
+                            aria-label={`Count for ${item.name}`}
+                            className="h-10 text-right font-display text-base font-bold tabular-nums"
+                          />
+                        </div>
+                      </td>
 
-                    {/* Live Variance */}
-                    <td className="p-2.5 text-right font-display text-base font-bold tabular-nums">
-                      {liveLight.variance !== null ? (
-                        liveLight.variance > 0 ? (
-                          <span className="text-excess-fg">+{liveLight.variance}</span>
-                        ) : liveLight.variance < 0 ? (
-                          <span className="text-short-fg font-bold">{liveLight.variance}</span>
+                      {/* Live Variance */}
+                      <td className="p-2.5 text-right font-display text-base font-bold tabular-nums">
+                        {liveLight.variance !== null ? (
+                          liveLight.variance > 0 ? (
+                            <span className="text-excess-fg">+{liveLight.variance}</span>
+                          ) : liveLight.variance < 0 ? (
+                            <span className="text-short-fg font-bold">{liveLight.variance}</span>
+                          ) : (
+                            <span className="text-match-fg font-bold">0</span>
+                          )
                         ) : (
-                          <span className="text-match-fg font-bold">0</span>
-                        )
-                      ) : (
-                        <span className="text-ink-soft">—</span>
-                      )}
-                    </td>
+                          <span className="text-ink-soft">—</span>
+                        )}
+                      </td>
 
-                    {/* Status Lamp */}
-                    <td className="p-2.5 pr-3.5 whitespace-nowrap">
-                      <Lamp
-                        status={liveLight.prismaStatus}
-                        variance={liveLight.variance ?? undefined}
+                      {/* Status Lamp */}
+                      <td className="p-2.5 pr-3.5 whitespace-nowrap">
+                        <Lamp
+                          status={liveLight.prismaStatus}
+                          variance={liveLight.variance ?? undefined}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Component Counting Cards (< md screens) */}
+          <div className="md:hidden divide-y divide-rule">
+            {items.map((item, index) => {
+              const currentActual = counts[item.componentId];
+              const liveLight = evaluateTrafficLight(currentActual, item.expectedQty);
+
+              return (
+                <div
+                  key={item.componentId}
+                  className="p-3.5 space-y-3 bg-paper"
+                >
+                  {/* Card Header: Thumbnail + Name + Status Lamp */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      {item.imageUrl && (
+                        <div className="relative w-8 h-8 shrink-0 bg-sheet rounded-[2px] border border-rule flex items-center justify-center p-0.5">
+                          <Image
+                            src={item.imageUrl}
+                            alt={item.name}
+                            width={24}
+                            height={24}
+                            className="object-contain"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-bold text-ink text-sm">{item.name}</div>
+                        <div className="text-[11px] text-ink-soft font-mono">
+                          {item.piecesPerGarment}× per garment
+                        </div>
+                      </div>
+                    </div>
+                    <Lamp
+                      status={liveLight.prismaStatus}
+                      variance={liveLight.variance ?? undefined}
+                    />
+                  </div>
+
+                  {/* Quantity Stats & Variance Bar */}
+                  <div className="grid grid-cols-2 gap-2 bg-sheet/40 p-2 rounded border border-rule/60 text-center text-xs">
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-ink-soft">Expected</div>
+                      <div className="font-display font-bold text-ink text-base">{item.expectedQty}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-ink-soft">Variance</div>
+                      <div className="font-display font-bold text-base">
+                        {liveLight.variance !== null ? (
+                          liveLight.variance > 0 ? (
+                            <span className="text-excess-fg">+{liveLight.variance}</span>
+                          ) : liveLight.variance < 0 ? (
+                            <span className="text-short-fg font-bold">{liveLight.variance}</span>
+                          ) : (
+                            <span className="text-match-fg font-bold">0</span>
+                          )
+                        ) : (
+                          <span className="text-ink-soft">—</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Touch-Friendly Count Input Row */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1" onKeyDown={(e) => handleKeyDownOnInput(e, index)}>
+                      <IntegerInput
+                        value={currentActual}
+                        onChange={(val) => handleCountChange(item.componentId, val)}
+                        disabled={isSaving || isApproving}
+                        placeholder={`Count (exp: ${item.expectedQty})`}
+                        aria-label={`Count for ${item.name}`}
+                        className="h-10 text-right font-display text-base font-bold tabular-nums"
                       />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleCountChange(item.componentId, item.expectedQty)}
+                      className="h-10 px-3 text-xs font-bold shrink-0 border-rule bg-sheet hover:bg-paper text-ink cursor-pointer"
+                    >
+                      Fill {item.expectedQty}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Right Column: Wastage Meter & Gate Decision Actions */}

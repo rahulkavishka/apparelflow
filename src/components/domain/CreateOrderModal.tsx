@@ -12,6 +12,7 @@ import { expectedFabric, wastagePct, isOverWastageCap } from "@/domain/wastage";
 import { deriveExpectedComponents } from "@/domain/multiplier";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface RecipeDto {
   id: string;
@@ -41,6 +42,7 @@ export function CreateOrderModal({
   recipes,
   onOrderCreated,
 }: CreateOrderModalProps) {
+  const queryClient = useQueryClient();
   const [selectedRecipeId, setSelectedRecipeId] = useState<string>("");
   const [targetQty, setTargetQty] = useState<number | null>(null);
   const [fabricRollId, setFabricRollId] = useState<string>("");
@@ -140,6 +142,9 @@ export function CreateOrderModal({
       } else {
         toast.success(`Cutting order ${createJson.data.orderNo} created as draft.`);
       }
+
+      await queryClient.invalidateQueries({ queryKey: ["orders"] });
+      await queryClient.invalidateQueries({ queryKey: ["verificationQueue"] });
 
       onOrderCreated();
       onOpenChange(false);

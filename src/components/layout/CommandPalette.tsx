@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Actor } from "@/lib/auth/session";
-import { toast } from "sonner";
 import {
   Search,
   Scissors,
@@ -12,7 +11,6 @@ import {
   Layers,
   BookOpen,
   History,
-  UserCheck,
   ArrowRight,
   X,
   Loader2,
@@ -28,7 +26,7 @@ interface CommandItem {
   id: string;
   title: string;
   subtitle?: string;
-  category: "Navigation" | "Orders" | "Switch account" | "Actions";
+  category: "Navigation" | "Orders" | "Actions";
   icon: React.ReactNode;
   onSelect: () => void;
 }
@@ -99,24 +97,6 @@ export function CommandPalette({ open, onOpenChange, actor }: CommandPaletteProp
     return () => clearTimeout(timer);
   }, [query, actor.role]);
 
-  const handleRoleSwitch = async (targetRole: string, email: string, pass: string, path: string) => {
-    onOpenChange(false);
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password: pass }),
-      });
-      if (!res.ok) throw new Error("Failed to switch role");
-      toast.success(`Switched role to ${targetRole}`);
-      router.push(path);
-      router.refresh();
-    } catch {
-      toast.error("Failed to switch role");
-    }
-  };
-
   const handleNavigate = (path: string) => {
     onOpenChange(false);
     router.push(path);
@@ -183,56 +163,6 @@ export function CommandPalette({ open, onOpenChange, actor }: CommandPaletteProp
     });
   }
 
-  // Switch Account items
-  if (actor.role !== "cutting_supervisor") {
-    baseCommands.push({
-      id: "switch-supervisor",
-      title: "Switch to Cutting supervisor (Nimali)",
-      subtitle: "supervisor@apparelflow.demo",
-      category: "Switch account",
-      icon: <UserCheck className="w-4 h-4 text-ink-soft" />,
-      onSelect: () =>
-        handleRoleSwitch(
-          "Cutting supervisor",
-          "supervisor@apparelflow.demo",
-          "Supervisor@123",
-          "/supervisor/orders"
-        ),
-    });
-  }
-  if (actor.role !== "cutting_verifier") {
-    baseCommands.push({
-      id: "switch-verifier",
-      title: "Switch to Cutting verifier (Kasun)",
-      subtitle: "verifier@apparelflow.demo",
-      category: "Switch account",
-      icon: <UserCheck className="w-4 h-4 text-ink-soft" />,
-      onSelect: () =>
-        handleRoleSwitch(
-          "Cutting verifier",
-          "verifier@apparelflow.demo",
-          "Verifier@123",
-          "/verifier/queue"
-        ),
-    });
-  }
-  if (actor.role !== "sewing_supervisor") {
-    baseCommands.push({
-      id: "switch-sewing",
-      title: "Switch to Sewing supervisor (Dilani)",
-      subtitle: "sewing@apparelflow.demo",
-      category: "Switch account",
-      icon: <UserCheck className="w-4 h-4 text-ink-soft" />,
-      onSelect: () =>
-        handleRoleSwitch(
-          "Sewing supervisor",
-          "sewing@apparelflow.demo",
-          "Sewing@123",
-          "/sewing/queue"
-        ),
-    });
-  }
-
   // Filter commands by query
   const filteredCommands = query
     ? baseCommands.filter(
@@ -250,7 +180,7 @@ export function CommandPalette({ open, onOpenChange, actor }: CommandPaletteProp
       >
         <DialogTitle className="sr-only">Command Palette</DialogTitle>
         <DialogDescription className="sr-only">
-          Quick search across orders, pages, and accounts
+          Quick search across orders, recipes, and navigation
         </DialogDescription>
 
         {/* Seamless Search Bar */}

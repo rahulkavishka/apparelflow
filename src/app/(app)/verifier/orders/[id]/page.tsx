@@ -15,6 +15,7 @@ import { RejectOrderModal } from "@/components/domain/RejectOrderModal";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { evaluateTrafficLight, evaluateVerificationBatch } from "@/domain/traffic-light";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { VerificationOrderDto } from "@/services/verification.service";
 import { ArrowLeft, Check, Lock, AlertTriangle, Save } from "lucide-react";
 
@@ -25,6 +26,7 @@ export default function VerificationTerminalPage({
 }) {
   const resolvedParams = use(params);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [data, setData] = useState<VerificationOrderDto | null>(null);
   const [counts, setCounts] = useState<Record<string, number | null>>({});
@@ -154,6 +156,8 @@ export default function VerificationTerminalPage({
       }
 
       setData(json.data);
+      queryClient.invalidateQueries({ queryKey: ["verificationQueue"] });
+      queryClient.invalidateQueries({ queryKey: ["verificationOrder", resolvedParams.id] });
       toast.success("Component counts saved and verified.");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to save counts.";
@@ -184,6 +188,11 @@ export default function VerificationTerminalPage({
         throw new Error(json.error?.message || "Approval failed.");
       }
 
+      await queryClient.invalidateQueries({ queryKey: ["verificationQueue"] });
+      await queryClient.invalidateQueries({ queryKey: ["verificationHistory"] });
+      await queryClient.invalidateQueries({ queryKey: ["sewingQueue"] });
+      await queryClient.invalidateQueries({ queryKey: ["orders"] });
+
       toast.success(`Cutting order ${order.orderNo} successfully verified and released to sewing!`);
       router.push("/verifier/queue");
     } catch (err: unknown) {
@@ -205,6 +214,10 @@ export default function VerificationTerminalPage({
     if (!res.ok) {
       throw new Error(json.error?.message || "Failed to reject batch.");
     }
+
+    await queryClient.invalidateQueries({ queryKey: ["verificationQueue"] });
+    await queryClient.invalidateQueries({ queryKey: ["verificationHistory"] });
+    await queryClient.invalidateQueries({ queryKey: ["orders"] });
 
     toast.success(`Order ${order.orderNo} rejected and returned to supervisor for re-cutting.`);
     router.push("/verifier/queue");

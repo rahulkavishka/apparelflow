@@ -18,6 +18,7 @@ import { TableLoadingRow } from "@/components/ui/LoadingSpinner";
 import { PeekDrawer, PeekDrawerData } from "@/components/domain/PeekDrawer";
 import { useOrdersList, useSubmitOrder, useRecutOrder } from "@/hooks/useOrders";
 import { useRecipesList } from "@/hooks/useRecipes";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { OrderStatus } from "@prisma/client";
 import {
@@ -31,6 +32,7 @@ import {
 } from "lucide-react";
 
 function SupervisorOrdersContent() {
+  const queryClient = useQueryClient();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -814,7 +816,8 @@ function SupervisorOrdersContent() {
         onOpenChange={setIsCreateModalOpen}
         recipes={recipes}
         onOrderCreated={() => {
-          // Invalidate queries or re-fetch
+          queryClient.invalidateQueries({ queryKey: ["orders"] });
+          queryClient.invalidateQueries({ queryKey: ["verificationQueue"] });
         }}
       />
 

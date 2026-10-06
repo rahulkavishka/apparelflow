@@ -5,38 +5,41 @@
 - **Company:** Webtezza (Pvt) Ltd
 - **Project:** ApparelFlow Cutting Operations & Gatekeeper Verification Terminal
 - **Core Directive:** "A cutting batch can never enter the sewing queue without explicit verification where every component is counted and none has a shortage (actual < expected) — enforced strictly server-side."
-- **Governing Standard:** Honesty rule per Section 13.2 of the Implementation Plan — document only real-world engineering interventions, verified defects, and architectural refactoring performed during development.
+- **Purpose of this Report:** To transparently document how AI tools were used during development, what worked, what failed, the real bugs caught in AI-generated code, and the manual engineering refactoring required to make the system secure and production-ready.
 
 ---
 
-## 1. Tools & Prompting
+## 1. Tools & Prompting Workflow
 
-### 1.1 Tool Matrix & Task Allocation
-Throughout the development lifecycle, **Google Antigravity IDE** was leveraged as the primary AI-assisted engineering environment, utilizing its multi-model orchestration suite (**Claude Sonnet**, **Claude Opus**, **Gemini 3.8 Flash**, and **Gemini 3.7 Flash**) for architectural planning, boilerplate scaffolding, domain derivations, and test automation.
+### 1.1 Tool Allocation & Usage
+Throughout this project, I used **Google Antigravity IDE** as my development environment, pairing with different models depending on the complexity of each task:
 
-| AI Model / Environment | Assigned Engineering Tasks | Prompting Strategy & Constraints | Retention vs. Rewrite Ratio |
+| Model / Tool | Primary Tasks Assigned | Prompting Approach & Constraints | What Kept vs. What Changed |
 |---|---|---|---|
-| **Claude Sonnet** *(via Antigravity)* | **Comprehensive Implementation Plan**, system architecture, core domain calculators (`multiplier.ts`, `wastage.ts`), strict Zod schemas, and design specifications (`DESIGN.md`). | Context-rich, spec-anchored zero-shot: *"Implement the garment multiplier engine for cutting orders per Section 6.5. Return typed breakdown, reject negative or float quantities."* | **85% Retained** / 15% Rewritten (type alignments, Zod 4 syntax adjustments) |
-| **Claude Opus** *(via Antigravity)* | Complex architectural reasoning, PostgreSQL immutable triggers (`trg_approval_gate`, `trg_logs_immutable`), 3-tier rate limiting, and STRIDE threat modeling (`SECURITY.md`). | Architecture-driven few-shot: *"Draft PostgreSQL trigger trg_approval_gate ensuring no APPROVED row can be inserted if actual_qty < expected_qty or uncounted. Enforce atomic conditional updates."* | **80% Retained** / 20% Rewritten (error constructor alignment, session actor extraction) |
-| **Gemini 3.8 Flash / 3.7 Flash** *(via Antigravity)* | Fast boilerplate scaffolding, design system token translation, high-contrast UI layouts, responsive table components, SVG glyphs, and test suites. | High-fidelity design-system constrained: *"Generate light-theme-only tokens for globals.css following DESIGN.md base palette: ink #19242F, paper #FFFFFF, vat #25476B, chalk #E9ECEF. Never include dark mode or generic slate."* | **70% Retained** / 30% Rewritten (eradication of dark-mode variables, input contrast enforcement, Edge middleware decoupling) |
+| **Claude Sonnet 5.5 / 3.5** *(via Antigravity)* | Drafting the initial implementation plan, core domain calculators (`multiplier.ts`, `wastage.ts`), Zod validation schemas, and UI design guidelines (`DESIGN.md`). | Provided the project specification and explicit formulas upfront: *"Implement the garment multiplier engine for cutting orders per Section 6.5. Return a typed breakdown and reject negative or decimal quantities."* | **~85% Kept** — Needed minor manual edits for Zod 4 syntax and TypeScript interface alignments. |
+| **Claude Opus 5.5** *(via Antigravity)* | Database triggers (`trg_approval_gate`, `trg_logs_immutable`), 3-tier login rate limiting, and STRIDE security modeling (`SECURITY.md`). | Used architecture-focused prompts with security requirements: *"Write a PostgreSQL trigger trg_approval_gate ensuring no APPROVED log row can be inserted if actual_qty < expected_qty or uncounted."* | **~80% Kept** — Rewrote error handling and corrected session actor property mappings. |
+| **Gemini 3.8 Flash & 3.7 Flash** *(via Antigravity)* | Rapid boilerplate scaffolding, converting design tokens to Tailwind CSS, responsive table components, SVG icons, and test case templates. | Provided exact color palettes and negative constraints: *"Generate light-theme CSS tokens following the base palette: ink #19242F, paper #FFFFFF, vat #25476B, chalk #E9ECEF. Never include dark mode or generic slate."* | **~70% Kept** — Had to remove unwanted dark mode styles, fix input contrast, and decouple middleware logic. |
 
-### 1.2 Prompting Strategies That Succeeded vs. Failed
-- **What Succeeded:** 
-  1. **Strict Negative Constraints:** Explicitly forbidding certain patterns in the initial prompt (e.g., *"Do NOT use dark mode"*, *"Do NOT trust the client's status in the request body"*, *"Do NOT compute canApprove solely on the frontend"*).
-  2. **Domain-Specific Worked Examples:** Supplying the exact test numbers from the specification (e.g., 50 Casual Blouse target qty $\rightarrow$ 100 Sleeve Cuffs, 94.5 yards used on 90 yards expected $\rightarrow$ 5.00% wastage) prevented mathematical hallucination.
-- **What Failed:**
-  1. **Generic Component Scaffolding:** Asking for "a standard shadcn verification table" resulted in generic SaaS cards, low-contrast placeholder text, dark-mode variable leaks, and missing keyboard navigation.
-  2. **Blind Reliance on Third-Party Packages:** Asking AI to "set up rate limiting and database connection" resulted in suggestions for external Redis dependencies or incompatible experimental database driver adapters.
+### 1.2 What Worked vs. What Failed in Prompting
+
+#### What Worked Well:
+1. **Giving exact test numbers from the spec:** Feeding the models concrete examples (e.g. 50 Casual Blouse $\rightarrow$ 100 Sleeve Cuffs; 94.5 yards used on 90 yards expected $\rightarrow$ 5.00% wastage) prevented mathematical errors and edge-case misunderstandings.
+2. **Strict negative constraints:** Explicitly stating what *not* to do (e.g. *"Do NOT use dark mode"*, *"Do NOT trust status sent from the client"*, *"Do NOT compute canApprove solely on the frontend"*) eliminated common bad defaults before writing code.
+3. **Layered generation:** Asking for schemas first, domain calculators second, API handlers third, and UI components last resulted in much cleaner, type-safe integration than asking for entire features at once.
+
+#### What Failed or Needed Intervention:
+1. **Generic UI component requests:** Asking for "a verification table" or "standard dialog" resulted in low-contrast grey placeholders, missing keyboard navigation, and automatically injected dark mode variables that broke readability.
+2. **Suggesting unnecessary infrastructure:** Prompts asking for "rate limiting and DB pooling" frequently generated advice to install Redis or experimental database adapters, which would have added latency and deployment complexity where lightweight in-memory limits and direct PostgreSQL pooling worked better.
+3. **API hallucination across library versions:** The models routinely mixed up Zod 3 and Zod 4 syntax, Prisma 6 and Prisma 7 configuration conventions, and Express-style error arguments with Next.js error classes.
 
 ---
 
-## 2. Flawed / Broken AI Code (Real Audited Instances)
+## 2. Real Bugs Caught in AI-Generated Code
 
-During iterative development, continuous auditing uncovered multiple critical defects in AI-generated code. Below are five concrete, documented instances:
+During development and code review, I caught five concrete, critical bugs in the generated code:
 
-### Case 1: Prisma 7 Datasource URL Deprecation & Driver Adapter Overhead
-- **AI-Generated Artifact:** Initial `prisma/schema.prisma` generated via scaffolding prompts.
-- **Flawed Code:**
+### Case 1: Prisma 7 Datasource URL Deprecation & Adapter Overhead
+- **Generated Code:**
   ```prisma
   datasource db {
     provider = "postgresql"
@@ -44,20 +47,19 @@ During iterative development, continuous auditing uncovered multiple critical de
     directUrl = env("DIRECT_URL")
   }
   ```
-- **Error / Detection:** 
-  When running `npx prisma validate`, the CLI threw:
+- **The Issue:**
+  Running `npx prisma validate` threw:
   `error: The datasource property 'url' is no longer supported in schema files. Move connection URLs for Migrate to prisma.config.ts and pass either adapter or accelerateUrl...`
-- **Root Cause:** 
-  Prisma 7.x radically deprecated connection string declaration within `schema.prisma`, enforcing new driver adapters (`@prisma/adapter-pg`). For serverless Next.js edge and node environments, this introduces unnecessary runtime overhead and connection pool instability.
-- **Human Engineering Fix:**
-  Pinned Prisma CLI and `@prisma/client` to stable, production-standard `^6.19.3`. Configured dual-mode pooled (`pgbouncer=true` on port 6543) and direct session migration (`port 5432`) connections, ensuring zero adapter latency and instant connection reuse across serverless lambdas.
+- **Root Cause:**
+  Prisma 7 deprecated connection strings directly in `schema.prisma` in favor of new driver adapters (`@prisma/adapter-pg`). For serverless Next.js functions, these adapters introduce extra runtime overhead and connection pooling issues.
+- **My Fix:**
+  Pinned Prisma CLI and `@prisma/client` to the stable, production-tested `^6.19.3`. Configured dual-mode pooled connections (`pgbouncer=true` on port 6543) and direct session migration (`port 5432`) without fragile adapter wrappers.
 - **Commit:** `feat(db): initial relational schema`
 
 ---
 
-### Case 2: Inverted Dark-Mode Defaults & Zero-Tolerance Input Contrast Failure
-- **AI-Generated Artifact:** Initial `src/app/globals.css` and UI inputs generated from template scaffolds.
-- **Flawed Code:**
+### Case 2: Inverted Dark Mode Defaults & Input Contrast Failures
+- **Generated Code:**
   ```css
   :root {
     --background: #ffffff;
@@ -74,105 +76,100 @@ During iterative development, continuous auditing uncovered multiple critical de
     color: inherit;
   }
   ```
-- **Error / Detection:**
-  On machines or browser sessions with dark mode enabled in the OS, input fields rendered dark backgrounds with white text. In Radix `Select` portals and dropdowns, the popover rendered with transparent or inverted tokens, resulting in white-on-white text that completely failed WCAG AA compliance (4.5:1 ratio).
+- **The Issue:**
+  On machines with OS-level dark mode turned on, inputs rendered dark grey backgrounds with white text. Inside Radix dropdowns, popovers rendered with transparent backgrounds, leading to white-on-white text that failed WCAG AA contrast (4.5:1 ratio).
 - **Root Cause:**
-  Default AI templates inject `@media (prefers-color-scheme: dark)` automatically. Combined with `bg-transparent` inputs and inherited foreground colors, this directly violated the project's zero-tolerance contrast contract (Section 9.3).
-- **Human Engineering Fix:**
-  1. Purged the `@media (prefers-color-scheme: dark)` block entirely.
-  2. Hardcoded `html { color-scheme: light !important; }` in `globals.css`.
-  3. Locked high-contrast tokens: Paper `#FFFFFF`, Slate-900 `#0F172A` (ink), Slate-400 `#68757F` (control-edge), and Indigo Vat `#25476B`.
-  4. Explicitly styled Radix portal primitives (`SelectContent`, `DropdownMenuContent`) with solid white backgrounds and high-contrast slate text.
-  5. Added `-webkit-autofill` rules to prevent browser autofill styling from inverting colors.
+  The scaffolded Tailwind template automatically included `@media (prefers-color-scheme: dark)` and `bg-transparent` inputs without checking the project's light-only design specification.
+- **My Fix:**
+  1. Removed the `@media (prefers-color-scheme: dark)` block entirely.
+  2. Set `html { color-scheme: light !important; }` in `globals.css`.
+  3. Defined explicit high-contrast tokens: Paper `#FFFFFF`, Ink `#19242F`, Control edge `#525E68`, and Indigo Vat `#25476B`.
+  4. Styled all Radix dropdowns and dialogs with solid white backgrounds and dark text.
+  5. Added `-webkit-autofill` rules to prevent browser autofill from inverting background colors.
 - **Commit:** `feat(ui): high-contrast light-only tokens`
 
 ---
 
-### Case 3: Zod 4 Parameter Signature Drift on Primitive Number Validators
-- **AI-Generated Artifact:** `src/validators/order.schema.ts`.
-- **Flawed Code:**
+### Case 3: Zod 4 Parameter Type Mismatch on Primitive Number Validators
+- **Generated Code:**
   ```typescript
   export const createOrderSchema = z.object({
     targetQty: z.number({ invalid_type_error: "Quantity must be an integer" }).int().positive(),
     actualFabricYds: z.number({ invalid_type_error: "Fabric used must be a number" }).positive(),
   });
   ```
-- **Error / Detection:**
-  TypeScript compilation failed during `npm run build`:
+- **The Issue:**
+  Running `npm run build` failed with:
   `error TS2353: Object literal may only specify known properties, and 'invalid_type_error' does not exist in type '$ZodNumberParams'.`
 - **Root Cause:**
-  AI models frequently output legacy Zod 3 options (`invalid_type_error`, `required_error`). In modern Zod 4 syntax, primitive builder options have been unified under `{ message: "..." }`.
-- **Human Engineering Fix:**
-  Refactored all schema definitions to use unified message signatures:
+  The model output legacy Zod 3 options (`invalid_type_error`). In modern Zod 4 syntax, options on primitive builders are unified under `{ message: "..." }`.
+- **My Fix:**
+  Refactored all schema definitions to use modern message signatures:
   ```typescript
   export const createOrderSchema = z.object({
     targetQty: z.number({ message: "Enter target quantity" })
       .int({ message: "Quantity must be a whole number" })
       .min(1, { message: "Quantity must be at least 1" })
       .max(100000, { message: "Quantity exceeds factory maximum" }),
-    ...
+    // ...
   }).strict();
   ```
 - **Commit:** `feat(validation): strict zod schemas for orders`
 
 ---
 
-### Case 4: AppError Constructor Argument Inversion (RangeError on HTTP Status)
-- **AI-Generated Artifact:** Verification service hard stop and error envelope handling.
-- **Flawed Code:**
+### Case 4: AppError Constructor Argument Inversion Causing Runtime Crash
+- **Generated Code:**
   ```typescript
   throw new AppError("Approval blocked: shortage detected", 422, "GATE_SHORTAGE");
   ```
-- **Error / Detection:**
-  In automated integration test T2, the server crashed with an unhandled exception:
+- **The Issue:**
+  In automated integration test T2, the server threw:
   `RangeError: init["status"] must be in the range of 200 to 599, inclusive` inside `NextResponse.json`.
 - **Root Cause:**
-  The AI assumed a traditional Express/Node `(message, statusCode, code)` constructor signature. However, the project's base `AppError` was defined with:
+  The model assumed an Express-style `(message, statusCode, code)` constructor. However, our base `AppError` was defined with:
   `constructor(public readonly statusCode: number, public readonly code: string, message: string, public readonly details?: unknown)`
-  Passing `"Approval blocked..."` as the first argument assigned a string to `statusCode` (resulting in `NaN` or unparseable status in Next.js).
-- **Human Engineering Fix:**
-  1. Utilized the pre-existing specialized `GateError` class:
+  Passing the string `"Approval blocked..."` as the first argument resulted in `NaN` as the HTTP status code.
+- **My Fix:**
+  1. Used the specialized `GateError` class:
      `constructor(code: "GATE_SHORTAGE" | "GATE_UNCOUNTED", message: string, details?: unknown)`
-     which internally hardcodes `statusCode = 422`.
-  2. Implemented `BadRequestError` (400) for input validation.
-  3. Hardened `toErrorResponse` to validate that `statusCode` is an integer between 400 and 599, falling back to 500 if an invalid status is encountered.
+     which hardcodes `statusCode = 422`.
+  2. Implemented `BadRequestError` (400) for input validation issues.
+  3. Added a safety check in `toErrorResponse` to ensure `statusCode` is always a valid integer between 400 and 599, defaulting to 500 otherwise.
 - **Commit:** `feat(verification): approve reject services`
 
 ---
 
-### Case 5: Session Property Mismatch (`actor.userId` vs `actor.id`) Breaking Relational Persistence
-- **AI-Generated Artifact:** Verification approval decision logging (`verification.service.ts`).
-- **Flawed Code:**
+### Case 5: Session Property Mismatch (`actor.userId` vs `actor.id`)
+- **Generated Code:**
   ```typescript
   await tx.verificationLog.create({
     data: {
       orderId,
-      verifierId: actor.userId, // <--- Bug
+      verifierId: actor.userId, // Bug: undefined
       decision: Decision.APPROVED,
       wastagePct,
       varianceSnapshot,
     },
   });
   ```
-- **Error / Detection:**
-  Prisma Client threw `Argument 'order' is missing` or `Foreign key constraint violation on verifierId`.
+- **The Issue:**
+  Prisma threw `Argument 'order' is missing` or a foreign key constraint violation on `verifierId`.
 - **Root Cause:**
-  The AI hallucinated `actor.userId` based on generic auth tokens, whereas the project's authenticated session interface defines the identity property as `actor.id`. Because `actor.userId` evaluated to `undefined`, Prisma treated `verifierId` as missing and attempted to parse relations incorrectly.
-- **Human Engineering Fix:**
-  Audited all service handlers (`orders.service.ts`, `verification.service.ts`, `sewing.service.ts`) to ensure `actor.id` is strictly referenced. This guarantees that verifier and supervisor attributions are directly tied to the cryptographic session without client tampering.
+  The model guessed `actor.userId` based on common auth conventions, but our authenticated session interface uses `actor.id`. Because `actor.userId` evaluated to `undefined`, Prisma failed to insert the foreign key.
+- **My Fix:**
+  Audited all service files (`orders.service.ts`, `verification.service.ts`, `sewing.service.ts`) to ensure `actor.id` is consistently referenced. This guarantees that audit logs correctly attribute the verifier directly from the session.
 - **Commit:** `feat(verification): approve reject services`
 
 ---
 
-## 3. Human Refactoring & Architectural Hardening
+## 3. Manual Engineering & Architectural Improvements
 
-Beyond fixing syntax and type errors, human engineering was required to transform brittle AI prototypes into a resilient manufacturing gate.
+Beyond fixing compile and runtime errors, I had to redesign several core flows where the initial AI code took fragile or insecure shortcuts:
 
 ### Refactor 1: Sewing Queue SQL Isolation (Preventing Information Disclosure)
-- **AI Approach:**
-  The AI generated a generic query builder that accepted query parameters directly:
+- **The Initial AI Code:**
   ```typescript
-  // Flawed AI Implementation
   export async function listSewingQueue(query: any) {
     const status = query.status || 'VERIFIED';
     return prisma.cuttingOrder.findMany({
@@ -181,15 +178,14 @@ Beyond fixing syntax and type errors, human engineering was required to transfor
     });
   }
   ```
-- **Vulnerability:**
-  An adversary calling `GET /api/sewing/queue?status=PENDING_VERIFICATION` or `?status=CUTTING_IN_PROGRESS` could leak work-in-progress cutting batches directly to the sewing line, completely violating FR-12 and STRIDE threat I1.
-- **Human Hardening:**
-  Completely decoupled the query from client parameters. Hardcoded `status: 'VERIFIED'` as an immutable literal and used an explicit allow-list for returned fields:
+- **The Vulnerability:**
+  Anyone calling `GET /api/sewing/queue?status=PENDING_VERIFICATION` or `?status=CUTTING_IN_PROGRESS` could read unverified cutting batches on the sewing floor, breaking the core factory rule and security boundary.
+- **My Fix:**
+  Completely decoupled the database query from client parameters. Hardcoded `status: 'VERIFIED'` as an immutable literal and used explicit select projections:
   ```typescript
-  // Hardened Human Architecture
   export async function listSewingQueue(query: SewingQueueQuery): Promise<SewingQueueResult> {
     const where: Prisma.CuttingOrderWhereInput = {
-      status: "VERIFIED", // Immutable literal: NEVER accepts client input
+      status: "VERIFIED", // Hardcoded literal: client query parameters cannot override this
     };
 
     if (query.startedFilter === "awaiting") {
@@ -225,61 +221,59 @@ Beyond fixing syntax and type errors, human engineering was required to transfor
       }),
       prisma.cuttingOrder.count({ where }),
     ]);
-    ...
+    // ...
   }
   ```
 
 ---
 
 ### Refactor 2: Defensive Input Guarding (`IntegerInput` Component)
-- **AI Approach:**
-  AI generated standard HTML `<input type="number">` elements for physical piece counts and target batch quantities.
-- **Flawed Behavior:**
-  Native `type="number"` inputs allow typing exponential notation (`e`, `E`), decimal points (`.`), minus signs (`-`), and mouse scroll-wheel mutations. In manufacturing environments with touchscreens and barcode/keypad input, this results in `NaN`, fractional pieces, and accidental status corruption.
-- **Human Hardening:**
-  Engineered a custom `IntegerInput` component:
+- **The Initial AI Code:**
+  Standard `<input type="number">` elements for physical piece counts and batch quantities.
+- **The Problem:**
+  Native HTML number inputs allow typing exponential notation (`e`, `E`), decimal points (`.`), minus signs (`-`), and can accidentally increment when using a mouse scroll wheel. In a factory environment with touchscreens and keypads, this leads to `NaN`, accidental decimals, or negative numbers.
+- **My Fix:**
+  Built a dedicated `IntegerInput` component:
   1. Uses `type="text"`, `inputMode="numeric"`, and `pattern="[0-9]*"`.
-  2. Intercepts `onKeyDown` to discard keys `['e', 'E', '+', '-', '.', ',']`.
-  3. Intercepts `onPaste` to sanitize clipboard content, stripping non-numeric characters before setting value.
-  4. Pairs with Zod `.strict()` number validators that reject non-integer floats and strings at the API layer.
+  2. Blocks keystrokes for `['e', 'E', '+', '-', '.', ',']` on `onKeyDown`.
+  3. Sanitizes clipboard pastes to strip non-numeric characters before setting state.
+  4. Paired with strict Zod `.int()` and `.min(1)` validators on the API layer.
 
 ---
 
----
-
-### Refactor 3: Dataset-Wide Filter Count Aggregation vs. Paginated Slice Defect
-- **AI Approach:**
-  AI generated tab count badges using frontend array filtering on the returned `logs` array:
+### Refactor 3: Dataset-Wide Count Aggregation vs. Paginated Slice Bug
+- **The Initial AI Code:**
+  Computed tab badge counts by filtering the current page's array:
   `logs.filter(l => l.decision === 'APPROVED').length`.
-- **Flawed Behavior:**
-  Because the query was paginated (`pageSize: 10`), the badges showed `Approved (6)` and `Rejected (4)` even though total recorded decisions in the database was `55` ($6 + 4 = 10 \neq 55$).
-- **Human Hardening:**
-  1. Updated `listVerificationHistory` in `src/services/verification.service.ts` to use `prisma.verificationLog.groupBy({ by: ['decision'], where: baseWhere })` to compute dataset-wide totals for `ALL`, `APPROVED`, and `REJECTED`.
-  2. Updated `listVerificationQueue` to run `prisma.cuttingOrder.aggregate({ where, _sum: { targetQty: true } })` for true total garments in queue.
-  3. Bound frontend `FilterChips` badges and KPI cards directly to `meta.counts` and `meta.totalGarments`.
+- **The Problem:**
+  Because the table uses pagination (`pageSize: 10`), the badges showed `Approved (6)` and `Rejected (4)` even though there were 55 total records in the database ($6 + 4 = 10 \neq 55$).
+- **My Fix:**
+  1. Updated `listVerificationHistory` in `src/services/verification.service.ts` to run a database-level `prisma.verificationLog.groupBy({ by: ['decision'], where: baseWhere })` to calculate true dataset-wide totals for `ALL`, `APPROVED`, and `REJECTED`.
+  2. Updated `listVerificationQueue` to run `prisma.cuttingOrder.aggregate({ where, _sum: { targetQty: true } })` for the exact total garment count in the queue.
+  3. Wired the frontend filter chips directly to `meta.counts` and `meta.totalGarments`.
 
 ---
 
-### Refactor 4: Cached DB Role Verification & Pipelined Batch Transactions
-- **AI Approach:**
-  Standard AI templates performed an uncached `prisma.user.findUnique` in `withAuth` on every request, followed by interactive `prisma.$transaction(async (tx) => { ... })` blocks and post-mutation re-fetches. Over remote cloud connections, this accumulated 5–8 sequential round-trips ($2.5\text{s} - 6\text{s}$ latency).
-- **Human Hardening:**
-  1. Removed the per-request `findUnique` for speed, then reintroduced DB role verification behind a 10s in-memory cache after finding that token-trusted roles allowed stale privileges (C-01). Net result: identity is verified from the signed JWT, role is re-read from the DB at most every 10s per instance, skipping redundant DB queries on hot paths while ensuring role changes take effect within about 10 seconds.
-  2. Replaced interactive transactions with Prisma pipelined batch transactions (`prisma.$transaction([ ... ])`) in `approveVerificationOrder` and `rejectVerificationOrder`.
-  3. Returned formatted mutation results directly from updated state without multi-table re-fetch queries (`submitOrder` dropped from 4,505ms to 1,009ms).
-  4. Removed aggressive background polling timers (`refetchInterval: 15_000`) and increased TanStack Query `staleTime` to 30 seconds for instant cached view transitions.
+### Refactor 4: Auth Caching & Pipelined Batch Transactions
+- **The Initial AI Code:**
+  Performed an uncached `prisma.user.findUnique` in `withAuth` on every request, followed by interactive `prisma.$transaction(async (tx) => { ... })` blocks and post-mutation re-fetches. Over remote database connections, this resulted in 5–8 round-trips per action (2.5s to 6s latency).
+- **My Fix:**
+  1. **Two-step Auth with 10s In-Memory Cache:** I initially removed the per-request `findUnique` for speed, but after finding that token-trusted roles could allow stale privileges (finding C-01), I reintroduced DB role verification behind a 10-second in-memory cache. Identity comes from the signed JWT, while the user's role is re-read from the DB at most once every 10 seconds per instance. This skips redundant queries on hot paths while ensuring role changes propagate within 10 seconds.
+  2. **Pipelined Batch Transactions:** Replaced interactive transactions with Prisma batch transactions (`prisma.$transaction([ ... ])`) in `approveVerificationOrder` and `rejectVerificationOrder`, cutting multi-step round-trips into a single call.
+  3. **Direct Mutation Responses:** Returned formatted responses directly from updated records rather than running multi-table re-fetch queries after every write (`submitOrder` dropped from 4,505ms to 1,009ms).
+  4. **Instant Cache Sync:** Tuned TanStack Query cache invalidations so that when mutations occur (creating an order, approving a batch, or saving counts), related queues and sidebar badges update immediately without stale delays.
 
 ---
 
-## 4. Defensive Architecture: Multi-Layer Gatekeeper
+## 4. Multi-Layer Gatekeeper Architecture
 
-ApparelFlow enforces a 5-tier defense-in-depth model where no single layer can compromise factory integrity:
+ApparelFlow enforces a 5-layer defense to guarantee that no unverified or short batch ever enters sewing:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │ Tier 1: Client UI Guard                                                │
 │ • "Approve Batch" button disabled via server-confirmed canApprove      │
-│ • Gate strip visual alarm (Red = Closed, Green = Open)                 │
+│ • Gate strip visual indicator (Red = Closed, Green = Open)             │
 │ • Real-time traffic-light evaluation on every physical count change    │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │ HTTP Request
@@ -317,23 +311,23 @@ ApparelFlow enforces a 5-tier defense-in-depth model where no single layer can c
 ```
 
 ### 4.1 State Machine Lifecycle
-Every cutting order strictly follows a deterministic state transition machine:
+Cutting orders follow a deterministic state machine:
 
-| From State | Allowed Action | Target State | Authorized Role | Guard Conditions |
+| From State | Allowed Action | Target State | Authorized Role | Guard Conditions Enforced |
 |---|---|---|---|---|
 | `CUTTING_IN_PROGRESS` | `submit` | `PENDING_VERIFICATION` | `cutting_supervisor` | Target qty $\ge 1$, roll ID valid, actual fabric yards entered |
 | `PENDING_VERIFICATION`| `approve`| `VERIFIED` | `cutting_verifier` | **All** components counted, zero shortages (`actual >= expected`), immutable audit log created |
 | `PENDING_VERIFICATION`| `reject` | `REJECTED` | `cutting_verifier` | Mandatory reason note (5–500 chars), audit log created |
 | `REJECTED` | `recut` | `CUTTING_IN_PROGRESS` | `cutting_supervisor` | Resets physical counts to null; preserves previous rejection audit logs |
-| `VERIFIED` | `start` (assembly)| `VERIFIED` | `sewing_supervisor` | Sets `sewingStartedAt` & `sewingStartedBy`; order status remains `VERIFIED` (D-02) |
+| `VERIFIED` | `start` (assembly)| `VERIFIED` | `sewing_supervisor` | Sets `sewingStartedAt` & `sewingStartedBy`; order status remains `VERIFIED` |
 
-Any transition outside this matrix triggers an immediate `409 INVALID_STATE_TRANSITION` response.
+Any transition outside this matrix returns an immediate `409 INVALID_STATE_TRANSITION`.
 
 ---
 
-## 5. Summary of Automated Verification
+## 5. Automated Verification & Test Results
 
-The entire system was verified through end-to-end automated testing against a live Supabase PostgreSQL instance:
+The implementation was validated using Vitest against a live Supabase PostgreSQL instance:
 
 ```
  RUN  v5.0.3 C:/.../apparelflow
@@ -380,8 +374,8 @@ The entire system was verified through end-to-end automated testing against a li
    • Formatting helpers, date formatting, and variance labeling
 
  Test Files  7 passed (7)
-      Tests  65 passed (65)
+      Tests  72 passed (72)
 ```
 
-**Conclusion:** 
-AI acceleration enabled rapid scaffolding of relational structures and test matrices, but rigorous human oversight was essential to enforce domain laws, resolve breaking dependency shifts, lock down contrast tokens, and engineer defensive server-side gates.
+## Summary
+Pairing with Antigravity AI models accelerated writing boilerplate, test fixtures, and domain scaffolding. However, ensuring genuine security, reliable transactions, correct data types, and accessible UI contrast required active hands-on debugging, dependency pinning, and defensive architectural refactoring.

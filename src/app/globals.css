@@ -11,13 +11,13 @@
   --vat-deep: #1B3652;
   --vat-tint: #DCE6F1;
 
-  /* neutrals */
+  /* neutrals - enhanced contrast for better readability */
   --sheet: #F4F6F8;
   --row-hover: #EEF2F6;
   --rule: #C9D0D7;
-  --control-edge: #68757F;
-  --ink-soft: #44515C;
-  --ink-faint: #98A2AB;
+  --control-edge: #525E68;
+  --ink-soft: #303D47;
+  --ink-faint: #6A7782;
   --disabled-bg: #DFE4E8;
 
   /* status */
@@ -69,10 +69,49 @@
   --color-none-bg: var(--none-bg);     --color-none-fg: var(--none-fg);     --color-none-edge: var(--none-edge);
   --font-sans: var(--font-atkinson), system-ui, sans-serif;
   --font-display: var(--font-barlow), "Arial Narrow", sans-serif;
+
+  /* Elevated Typography Scale for enhanced legibility without layout distortion */
+  --text-2xs: 0.75rem;
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.15rem;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.35rem;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.55rem;
+  --text-lg: 1.1875rem;
+  --text-lg--line-height: 1.65rem;
+  --text-xl: 1.3125rem;
+  --text-xl--line-height: 1.8rem;
 }
 
-html { color-scheme: light !important; }
-body { background: var(--chalk); color: var(--ink); font-family: var(--font-sans); font-size: 16px; line-height: 24px; }
+html {
+  color-scheme: light !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--chalk);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+/* Elevate arbitrary micro typography for high legibility while preserving layout integrity */
+.text-\[10px\] {
+  font-size: 11px !important;
+  line-height: 1.25 !important;
+}
+.text-\[11px\] {
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+.text-\[13px\] {
+  font-size: 13.5px !important;
+  line-height: 1.4 !important;
+}
 
 /* autofill must never turn text white-on-white */
 input:-webkit-autofill,
@@ -99,7 +138,7 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 input::placeholder,
 textarea::placeholder {
   color: var(--ink-faint);
-  opacity: 0.7;
+  opacity: 0.85;
 }
 
 @media (prefers-reduced-motion: reduce) {

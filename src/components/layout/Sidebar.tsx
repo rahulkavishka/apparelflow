@@ -60,9 +60,8 @@ function SidebarContent({
 
   return (
     <aside
-      className={`bg-paper border-r border-rule flex flex-col h-full select-none transition-all duration-200 ${
-        collapsed ? "w-16" : "w-60"
-      } ${className}`}
+      className={`bg-paper border-r border-rule flex flex-col h-full select-none transition-all duration-200 ${collapsed ? "w-16" : "w-56"
+        } ${className}`}
     >
       {/* Brand Header */}
       <div className="h-12 px-3 flex items-center justify-between border-b border-rule bg-sheet/50 shrink-0">
@@ -129,12 +128,11 @@ function SidebarContent({
               href="/supervisor/orders"
               onClick={onNavigate}
               title={`Cutting orders (${supervisorCounts?.ALL ?? 0})`}
-              className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-2"} rounded-[3px] text-[13px] font-semibold transition-colors ${
-                (pathname === "/supervisor/orders" && !currentStatus) ||
-                (pathname.startsWith("/supervisor/orders/") && !pathname.includes("?"))
+              className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-2"} rounded-[3px] text-[13px] font-semibold transition-colors ${(pathname === "/supervisor/orders" && !currentStatus) ||
+                  (pathname.startsWith("/supervisor/orders/") && !pathname.includes("?"))
                   ? "bg-vat text-paper font-bold shadow-xs"
                   : "text-ink hover:bg-sheet hover:text-ink"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <Scissors className="w-4 h-4 shrink-0" />
@@ -142,12 +140,11 @@ function SidebarContent({
               </div>
               {!collapsed && supervisorCounts && (
                 <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-xs font-mono font-bold shrink-0 ${
-                    (pathname === "/supervisor/orders" && !currentStatus) ||
-                    pathname.startsWith("/supervisor/orders/")
+                  className={`text-[10px] px-1.5 py-0.2 rounded-xs font-mono font-bold shrink-0 ${(pathname === "/supervisor/orders" && !currentStatus) ||
+                      pathname.startsWith("/supervisor/orders/")
                       ? "bg-paper/20 text-paper"
                       : "bg-sheet text-ink-soft"
-                  }`}
+                    }`}
                 >
                   {supervisorCounts.ALL}
                 </span>
@@ -158,11 +155,10 @@ function SidebarContent({
               href="/supervisor/recipes"
               onClick={onNavigate}
               title="Recipes"
-              className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-2"} rounded-[3px] text-[13px] font-semibold transition-colors ${
-                pathname.startsWith("/supervisor/recipes")
+              className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-2"} rounded-[3px] text-[13px] font-semibold transition-colors ${pathname.startsWith("/supervisor/recipes")
                   ? "bg-vat text-paper font-bold shadow-xs"
                   : "text-ink hover:bg-sheet hover:text-ink"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <BookOpen className="w-4 h-4 shrink-0" />
@@ -184,11 +180,10 @@ function SidebarContent({
                 href="/supervisor/orders?status=CUTTING_IN_PROGRESS"
                 onClick={onNavigate}
                 title={`In progress (${supervisorCounts?.CUTTING_IN_PROGRESS ?? 0})`}
-                className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-1.5"} rounded-[3px] text-xs transition-colors ${
-                  pathname === "/supervisor/orders" && currentStatus === "CUTTING_IN_PROGRESS"
+                className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-1.5"} rounded-[3px] text-xs transition-colors ${pathname === "/supervisor/orders" && currentStatus === "CUTTING_IN_PROGRESS"
                     ? "bg-sheet font-bold text-ink border-l-2 border-vat pl-2"
                     : "text-ink hover:bg-sheet font-medium"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <FileText className="w-3.5 h-3.5 text-ink-soft" />
@@ -205,11 +200,10 @@ function SidebarContent({
                 href="/supervisor/orders?status=PENDING_VERIFICATION"
                 onClick={onNavigate}
                 title={`Pending gate (${supervisorCounts?.PENDING_VERIFICATION ?? 0})`}
-                className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-1.5"} rounded-[3px] text-xs transition-colors ${
-                  pathname === "/supervisor/orders" && currentStatus === "PENDING_VERIFICATION"
+                className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-1.5"} rounded-[3px] text-xs transition-colors ${pathname === "/supervisor/orders" && currentStatus === "PENDING_VERIFICATION"
                     ? "bg-sheet font-bold text-ink border-l-2 border-vat pl-2"
                     : "text-ink hover:bg-sheet font-medium"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <Clock className="w-3.5 h-3.5 text-ink-soft" />
@@ -226,11 +220,10 @@ function SidebarContent({
                 href="/supervisor/orders?status=REJECTED"
                 onClick={onNavigate}
                 title={`Rejected (Re-cut) (${supervisorCounts?.REJECTED ?? 0})`}
-                className={`flex items-center ${collapsed ? "justify-center p-2 relative" : "justify-between px-2.5 py-1.5"} rounded-[3px] text-xs transition-colors ${
-                  pathname === "/supervisor/orders" && currentStatus === "REJECTED"
+                className={`flex items-center ${collapsed ? "justify-center p-2 relative" : "justify-between px-2.5 py-1.5"} rounded-[3px] text-xs transition-colors ${pathname === "/supervisor/orders" && currentStatus === "REJECTED"
                     ? "bg-short-bg font-bold text-short-fg border-l-2 border-short-edge pl-2"
                     : "text-short-fg hover:bg-short-bg/30 font-bold"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="w-3.5 h-3.5 text-short-fg" />
@@ -250,11 +243,10 @@ function SidebarContent({
                 href="/supervisor/orders?status=VERIFIED"
                 onClick={onNavigate}
                 title={`Verified (${supervisorCounts?.VERIFIED ?? 0})`}
-                className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-1.5"} rounded-[3px] text-xs transition-colors ${
-                  pathname === "/supervisor/orders" && currentStatus === "VERIFIED"
+                className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-1.5"} rounded-[3px] text-xs transition-colors ${pathname === "/supervisor/orders" && currentStatus === "VERIFIED"
                     ? "bg-match-bg font-bold text-match-fg border-l-2 border-match-edge pl-2"
                     : "text-ink hover:bg-sheet font-medium"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-match-fg" />
@@ -283,11 +275,10 @@ function SidebarContent({
               href="/verifier/queue"
               onClick={onNavigate}
               title={`Verification queue (${verifierCount})`}
-              className={`flex items-center ${collapsed ? "justify-center p-2 relative" : "justify-between px-2.5 py-2"} rounded-[3px] text-[13px] font-semibold transition-colors ${
-                pathname === "/verifier/queue" || pathname.startsWith("/verifier/orders/")
+              className={`flex items-center ${collapsed ? "justify-center p-2 relative" : "justify-between px-2.5 py-2"} rounded-[3px] text-[13px] font-semibold transition-colors ${pathname === "/verifier/queue" || pathname.startsWith("/verifier/orders/")
                   ? "bg-vat text-paper font-bold shadow-xs"
                   : "text-ink hover:bg-sheet hover:text-ink"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <Clock className="w-4 h-4 shrink-0" />
@@ -295,11 +286,10 @@ function SidebarContent({
               </div>
               {!collapsed && verifierCount > 0 && (
                 <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-xs font-mono font-bold shrink-0 ${
-                    pathname.startsWith("/verifier/queue") || pathname.startsWith("/verifier/orders/")
+                  className={`text-[10px] px-1.5 py-0.2 rounded-xs font-mono font-bold shrink-0 ${pathname.startsWith("/verifier/queue") || pathname.startsWith("/verifier/orders/")
                       ? "bg-paper text-vat"
                       : "bg-vat text-paper"
-                  }`}
+                    }`}
                 >
                   {verifierCount}
                 </span>
@@ -313,11 +303,10 @@ function SidebarContent({
               href="/verifier/history"
               onClick={onNavigate}
               title="Decision history"
-              className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-2"} rounded-[3px] text-[13px] font-semibold transition-colors ${
-                pathname.startsWith("/verifier/history")
+              className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-2"} rounded-[3px] text-[13px] font-semibold transition-colors ${pathname.startsWith("/verifier/history")
                   ? "bg-vat text-paper font-bold shadow-xs"
                   : "text-ink hover:bg-sheet hover:text-ink"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <History className="w-4 h-4 shrink-0" />
@@ -329,11 +318,10 @@ function SidebarContent({
               href="/verifier/recipes"
               onClick={onNavigate}
               title="Recipe specifications"
-              className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-2"} rounded-[3px] text-[13px] font-semibold transition-colors ${
-                pathname.startsWith("/verifier/recipes")
+              className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-2"} rounded-[3px] text-[13px] font-semibold transition-colors ${pathname.startsWith("/verifier/recipes")
                   ? "bg-vat text-paper font-bold shadow-xs"
                   : "text-ink hover:bg-sheet hover:text-ink"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <BookOpen className="w-4 h-4 shrink-0" />
@@ -356,12 +344,11 @@ function SidebarContent({
               href="/sewing/queue"
               onClick={onNavigate}
               title={`Sewing queue (${sewingCounts?.all ?? 0})`}
-              className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-2"} rounded-[3px] text-[13px] font-semibold transition-colors ${
-                (pathname === "/sewing/queue" && (!currentStartedFilter || currentStartedFilter === "all")) ||
-                pathname.startsWith("/sewing/orders/")
+              className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-2"} rounded-[3px] text-[13px] font-semibold transition-colors ${(pathname === "/sewing/queue" && (!currentStartedFilter || currentStartedFilter === "all")) ||
+                  pathname.startsWith("/sewing/orders/")
                   ? "bg-vat text-paper font-bold shadow-xs"
                   : "text-ink hover:bg-sheet hover:text-ink"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <Layers className="w-4 h-4 shrink-0" />
@@ -369,12 +356,11 @@ function SidebarContent({
               </div>
               {!collapsed && sewingCounts && (
                 <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-xs font-mono font-bold shrink-0 ${
-                    (pathname === "/sewing/queue" && (!currentStartedFilter || currentStartedFilter === "all")) ||
-                    pathname.startsWith("/sewing/orders/")
+                  className={`text-[10px] px-1.5 py-0.2 rounded-xs font-mono font-bold shrink-0 ${(pathname === "/sewing/queue" && (!currentStartedFilter || currentStartedFilter === "all")) ||
+                      pathname.startsWith("/sewing/orders/")
                       ? "bg-paper/20 text-paper"
                       : "bg-sheet text-ink-soft"
-                  }`}
+                    }`}
                 >
                   {sewingCounts.all}
                 </span>
@@ -395,11 +381,10 @@ function SidebarContent({
                 href="/sewing/queue?startedFilter=awaiting"
                 onClick={onNavigate}
                 title={`Awaiting assembly (${sewingCounts?.awaiting ?? 0})`}
-                className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-1.5"} rounded-[3px] text-xs transition-colors ${
-                  pathname === "/sewing/queue" && currentStartedFilter === "awaiting"
+                className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-1.5"} rounded-[3px] text-xs transition-colors ${pathname === "/sewing/queue" && currentStartedFilter === "awaiting"
                     ? "bg-sheet font-bold text-ink border-l-2 border-vat pl-2"
                     : "text-ink hover:bg-sheet font-medium"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <Clock className="w-3.5 h-3.5 text-ink-soft" />
@@ -416,11 +401,10 @@ function SidebarContent({
                 href="/sewing/queue?startedFilter=started"
                 onClick={onNavigate}
                 title={`In assembly (${sewingCounts?.started ?? 0})`}
-                className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-1.5"} rounded-[3px] text-xs transition-colors ${
-                  pathname === "/sewing/queue" && currentStartedFilter === "started"
+                className={`flex items-center ${collapsed ? "justify-center p-2" : "justify-between px-2.5 py-1.5"} rounded-[3px] text-xs transition-colors ${pathname === "/sewing/queue" && currentStartedFilter === "started"
                     ? "bg-sheet font-bold text-ink border-l-2 border-vat pl-2"
                     : "text-ink hover:bg-sheet font-medium"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <Layers className="w-3.5 h-3.5 text-vat" />
@@ -451,7 +435,7 @@ function SidebarContent({
 
 export function Sidebar(props: SidebarProps) {
   return (
-    <Suspense fallback={<aside className={`w-60 shrink-0 bg-paper border-r border-rule flex flex-col h-full ${props.className || ""}`} />}>
+    <Suspense fallback={<aside className={`w-52 shrink-0 bg-paper border-r border-rule flex flex-col h-full ${props.className || ""}`} />}>
       <SidebarContent {...props} />
     </Suspense>
   );

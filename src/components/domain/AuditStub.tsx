@@ -36,12 +36,7 @@ export function AuditStub({
   const isApproved = decision === "APPROVED";
 
   return (
-    <div
-      style={{
-        clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%)",
-      }}
-      className="rounded-none border border-ink-soft/40 bg-paper p-5 space-y-4 max-w-lg shadow-none"
-    >
+    <div className="rounded-sm border border-rule bg-paper p-5 space-y-4 max-w-lg shadow-none">
       {/* Attribution Header */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">

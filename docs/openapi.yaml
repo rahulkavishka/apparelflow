@@ -9,7 +9,7 @@ info:
 servers:
   - url: http://localhost:3000
     description: Local development server
-  - url: https://apparelflow.vercel.app
+  - url: https://apparelflow-nine.vercel.app
     description: Production deployment
 
 paths:

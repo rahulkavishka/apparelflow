@@ -11,7 +11,7 @@ ApparelFlow is a full-stack web application implementing the **Cutting Operation
 ### Core Business Rule
 > **A cutting batch can never enter the Sewing Queue without explicit verification where every component is counted and none has a shortage (`actual < expected`) — enforced strictly server-side (422 Unprocessable Entity, DB trigger, UI disabled button).**
 
-- **Live Deployed Application:** [https://apparelflow.vercel.app](https://apparelflow.vercel.app)
+- **Live Deployed Application:** [https://apparelflow-nine.vercel.app](https://apparelflow-nine.vercel.app)
 - **Public GitHub Repository:** [https://github.com/rahulkavishka/apparelflow.git](https://github.com/rahulkavishka/apparelflow.git)
 - **AI Usage & Optimization Report:** [`AI_OPTIMIZATION_REPORT.md`](./AI_OPTIMIZATION_REPORT.md)
 - **Design System Specification:** [`DESIGN.md`](./DESIGN.md)
@@ -327,6 +327,6 @@ apparelflow/
 ---
 
 ## 12. License & Author
-- **Author:** Software Engineering Candidate for Webtezza (Pvt) Ltd
+- **Author:** Software Engineering Intern Candidate for Webtezza (Pvt) Ltd
 - **Assessment:** Practical Engineering Challenge — Production Batch Verification & Sewing Queue Gate
 - **License:** MIT License
